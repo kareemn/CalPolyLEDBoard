@@ -1,7 +1,7 @@
 /****************************************************************************
 ** Meta object code from reading C++ file 'mainwindow.h'
 **
-** Created: Mon Jan 14 15:16:59 2013
+** Created: Wed Jan 16 16:51:15 2013
 **      by: The Qt Meta Object Compiler version 63 (Qt 4.8.1)
 **
 ** WARNING! All changes made in this file will be lost!
@@ -32,14 +32,14 @@ static const uint qt_meta_data_MainWindow[] = {
 
  // slots: signature, parameters, type, tag, flags
       12,   11,   11,   11, 0x08,
-      36,   11,   11,   11, 0x08,
+      30,   11,   11,   11, 0x08,
 
        0        // eod
 };
 
 static const char qt_meta_stringdata_MainWindow[] = {
-    "MainWindow\0\0on_sendButton_clicked()\0"
-    "onDataAvailable()\0"
+    "MainWindow\0\0onDataAvailable()\0"
+    "on_save_button_clicked()\0"
 };
 
 void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **_a)
@@ -48,8 +48,8 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         Q_ASSERT(staticMetaObject.cast(_o));
         MainWindow *_t = static_cast<MainWindow *>(_o);
         switch (_id) {
-        case 0: _t->on_sendButton_clicked(); break;
-        case 1: _t->onDataAvailable(); break;
+        case 0: _t->onDataAvailable(); break;
+        case 1: _t->on_save_button_clicked(); break;
         default: ;
         }
     }

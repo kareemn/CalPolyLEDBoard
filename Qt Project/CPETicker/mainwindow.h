@@ -5,6 +5,7 @@
 #include <QDebug>
 
 #include "qextserialport.h"
+#include "qextserialenumerator.h"
 
 
 namespace Ui {
@@ -20,8 +21,9 @@ public:
     ~MainWindow();
     
 private slots:
-    void on_sendButton_clicked();
     void onDataAvailable();
+
+    void on_save_button_clicked();
 
 private:
     Ui::MainWindow *ui;

@@ -1,7 +1,7 @@
 /****************************************************************************
 ** Meta object code from reading C++ file 'qextserialport.h'
 **
-** Created: Mon Jan 14 15:00:09 2013
+** Created: Wed Jan 16 16:13:17 2013
 **      by: The Qt Meta Object Compiler version 63 (Qt 4.8.1)
 **
 ** WARNING! All changes made in this file will be lost!

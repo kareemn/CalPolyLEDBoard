@@ -10,6 +10,7 @@
 #define A_PIN		24
 #define B_PIN		25
 #define C_PIN		26
+#define D_PIN		27
 #define CLK_PIN	36
 #define LAT_PIN	31
 #define OE_PIN		32
@@ -27,9 +28,10 @@
 #define COLOR2		BLUE
 #define COLOR3		CYAN
 
-#define NUM_SCREENS	3
+#define NUM_SCREENS		1
+#define SCREEN_HEIGHT	32
 
-volatile uint8_t display[NUM_SCREENS*32][8];
+volatile uint8_t display[NUM_SCREENS*32][SCREEN_HEIGHT/2];
 
 
 static inline void pinOutput(int pin, int val)
@@ -55,7 +57,7 @@ void updateRow(int row) {
 	pinOutput(OE_PIN, 1); // set OE hig
 	
 	// Set the row address
-	PIOD->PIO_CODR = 0x7;
+	PIOD->PIO_CODR = 0xf;
 	PIOD->PIO_SODR = row;
 }
 
@@ -65,7 +67,7 @@ void TC3_Handler()
 {
 	pinOutput(13, 1);
 	long dummy = REG_TC1_SR0;
-	for (int i = 0; i < 8; i++)
+	for (int i = 0; i < SCREEN_HEIGHT/2; i++)
 	{
 		updateRow(i);
 	}
@@ -89,9 +91,9 @@ void setPixel(int x, int y, uint8_t color)
 {
 	color &= 7;
 	uint8_t temp;
-	if (y >= 8)
+	if (y >= SCREEN_HEIGHT/2)
 	{
-		y -= 8;
+		y -= SCREEN_HEIGHT/2;
 		temp = display[x][y] & 0x7;
 		color <<= 3;
 		display[x][y] = temp | color;
@@ -108,32 +110,14 @@ void fillScreen(int num, uint8_t color)
 	int i, j;
 	for (i = num*32; i < (num+1)*32; i++)
 	{
-		for (j = 0; j < 16; j++)
+		for (j = 0; j < SCREEN_HEIGHT/2; j++)
 		{
 			setPixel(i, j, color);
 		}
 	}
 }
 
-void fillHalf(int num, int half, uint8_t color)
-{
-	int i, j;
-	for (i = num*32; i < (num+1)*32; i++)
-	{
-		for (j = 0; j < 8; j++)
-		{
-			if (half)
-			{
-				setPixel(i, j+8, color);
-			}
-			else
-			{
-				setPixel(i, j, color);
-			}
-		}
-	}
-}
-
+/*
 void writeChar(int x, int y, uint8_t c, uint8_t color, uint8_t bg)
 {
 	for (int8_t i=0; i<6; i++ ) {
@@ -189,7 +173,7 @@ void TopString(char *str, uint8_t color)
 void BottomString(char *str, uint8_t color)
 {
 	uint8_t c; 
-	uint8_t x = 0, y = 8;
+	uint8_t x = 0, y = SCREEN_HEIGHT/2;
 	while ((c = *(str++)))
 	{
 		writeChar(x, y, c, color, BLACK);
@@ -200,8 +184,8 @@ void BottomString(char *str, uint8_t color)
 			return;
 		}
 	}
-   
 }
+*/
 
 void setup() {
 	Serial3.begin(57600);
@@ -220,60 +204,57 @@ void setup() {
 	pinMode(A_PIN,OUTPUT);
 	pinMode(B_PIN,OUTPUT);
 	pinMode(C_PIN,OUTPUT);
+	pinMode(D_PIN,OUTPUT);
 	pinMode(LAT_PIN,OUTPUT);
 
 	pinOutput(A_PIN, 0);
 	pinOutput(B_PIN, 0);
 	pinOutput(C_PIN, 0);
+	pinOutput(D_PIN, 0);
 	pinOutput(LAT_PIN, 0);
 	pinOutput(OE_PIN, 0);
 	pinOutput(CLK_PIN, 1);
 	
-	for (int i = 0; i < NUM_SCREENS; i++)
-	{
-		fillScreen(i, PURPLE);
-	}
-	
-	pinMode(13,OUTPUT);
 	startTimer(TC1, 0, TC3_IRQn, 200); //TC1 channel 0, the IRQ for that channel and the desired frequency
-	delay(500);
+	
 	for (int i = 0; i < NUM_SCREENS; i++)
 	{
-		fillScreen(i, BLACK);
+		fillScreen(i, WHITE);
 	}
+	while(1);
 	
-	TopString("~~Hello World!~~", WHITE);
-	BottomString("~~Hello World!~~", WHITE);
-	int x = 0, y = 0;
-	while(1)
-	{
-		if (Serial3.available())
-		{
-			char c = Serial3.read();
-			if (c == '\r')
-			{
-				for (int i = 0; i < NUM_SCREENS; i++)
-				{
-					fillScreen(i, BLACK);
-				}
-				y = 0;
-				x = 0;
-			}
-			else if (c == '\n')
-			{
-				y += 8;
-				x = 0;
-			}
-			else
-			{
-				if (x <= NUM_SCREENS*32-6)
-				{
-					writeChar(x, y, c, WHITE, BLACK);
-				}
-				x += 6;
-			}
-		}
-	}
+	// TopString("~~Hello World!~~", WHITE);
+	// BottomString("~~Hello World!~~", WHITE);
+	// int x = 0, y = 0;
+	// while(1)
+	// {
+		// if (Serial3.available())
+		// {
+			// char c = Serial3.read();
+			// if (c == '\r')
+			// {
+				// for (int i = 0; i < NUM_SCREENS; i++)
+				// {
+					// fillScreen(i, BLACK);
+				// }
+				// y = 0;
+				// x = 0;
+			// }
+			// else if (c == '\n')
+			// {
+				// y += 8;
+				// x = 0;
+			// }
+			// else
+			// {
+				// if (x <= NUM_SCREENS*32-6)
+				// {
+					// writeChar(x, y, c, WHITE, BLACK);
+				// }
+				// x += 6;
+			// }
+		// }
+	// }
 }
 
 void loop()
