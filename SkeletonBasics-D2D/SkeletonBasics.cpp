@@ -45,11 +45,15 @@ CSkeletonBasics::CSkeletonBasics() :
     m_pBrushBoneInferred(NULL),
     m_pNuiSensor(NULL)
 {
-	if (!ser.openPort(TEXT("COM1")))
-		exit(-1);
+	//if (!ser.openPort(TEXT("COM1")))
+	//	exit(-1);
 
 	come = false;
 	follow = false;
+	swipeleft1 = false;
+	swipeleft2 = false;
+	swiperight1 = false;
+	swiperight2 = false;
 	numberTracked = -1;
     ZeroMemory(m_Points,sizeof(m_Points));
 }
@@ -314,8 +318,29 @@ HRESULT CSkeletonBasics::CreateFirstConnected()
 }
 
 
-void CSkeletonBasics::doGestures(Vector4 h, Vector4 l, Vector4 r, Vector4 w)
+void CSkeletonBasics::doGestures(Vector4 h, Vector4 l, Vector4 r, Vector4 w, Vector4 le, Vector4 re)
 {
+	//left to right swipe gesture
+	//print lefthand coordinates
+	printf("lefthand = (x = %f, y = %f)\n", l.x, l.y);
+	if(((le.x - l.x) > .3f) && !swiperight1 && !swiperight2)
+	{
+		for (int i = 0; i < 1000; i++)
+			printf("swipe commenced\n");
+		swiperight1 = true;
+	}
+	if(swiperight1 == true)
+	{
+		if ((le.x - l.x > .1f) && (le.x-l.x < .3f) && ((l.y - le.y) > .3f))
+		{
+			swiperight1 = false;
+			swiperight2 = true;
+		}
+	}
+	if(swiperight2 == true)
+	{
+		printf("swipe to right completed1\n");
+	}
 
 	//come gestures
 	printf("head - lefthand = %f\n", (h.y - l.y));
@@ -343,7 +368,7 @@ void CSkeletonBasics::doGestures(Vector4 h, Vector4 l, Vector4 r, Vector4 w)
 		if (!ser.go(w.x,w.z))
 			OutputDebugString(TEXT("failed to send\n"));
 	}
-	//stop gestures
+	//stop come gestures
 	if ((r.z - h.z) > .6f)
 	{
 		if (!ser.stop())
@@ -397,7 +422,8 @@ void CSkeletonBasics::ProcessSkeleton()
 	Vector4 lefthand;
 	Vector4 head;
 	Vector4 waist;
-	
+	Vector4 leftelbow;
+	Vector4 rightelbow;
 	
 	if (numberTracked < 0)
 	{
@@ -419,9 +445,11 @@ void CSkeletonBasics::ProcessSkeleton()
 		lefthand = skeletonFrame.SkeletonData[numberTracked].SkeletonPositions[NUI_SKELETON_POSITION_HAND_LEFT];
 		head = skeletonFrame.SkeletonData[numberTracked].SkeletonPositions[NUI_SKELETON_POSITION_HEAD];
 		waist = skeletonFrame.SkeletonData[numberTracked].SkeletonPositions[NUI_SKELETON_POSITION_HIP_CENTER];
+		leftelbow = skeletonFrame.SkeletonData[numberTracked].SkeletonPositions[NUI_SKELETON_POSITION_ELBOW_LEFT];
+		rightelbow = skeletonFrame.SkeletonData[numberTracked].SkeletonPositions[NUI_SKELETON_POSITION_ELBOW_RIGHT];
 		printf("lefthand z is %f, head z is %f\n", lefthand.z, head.z);
 		//gesture tracking
-		doGestures(righthand,lefthand,head,waist);
+		doGestures(righthand,lefthand,head,waist,leftelbow,rightelbow);
 		//gesture tracking
 		if (follow)
 		{
