@@ -4,6 +4,18 @@
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
+    QImage* image = new QImage("C:/Users/Brian/Desktop/Winter '13 - Schoolwork/CalPolyLEDBoard/mario.png");
+    QImage image2 = image->scaledToHeight(32);
+    qDebug() << image2.width() << image2.height();
+    for (int i = 0; i < image2.width(); i++)
+    {
+        for (int j = 0; j < image2.height(); j++)
+        {
+            QRgb pixel = image2.pixel(i, j);
+            qDebug() << qRed(pixel) << qGreen(pixel) << qBlue(pixel);
+        }
+    }
+
 //    // find all available com ports
 //    QStringList comPorts;
 //    foreach (QextPortInfo info, QextSerialEnumerator::getPorts())
