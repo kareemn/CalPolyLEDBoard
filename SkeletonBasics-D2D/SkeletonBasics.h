@@ -65,6 +65,10 @@ private:
 	Vector4 hP;
 	Vector4 wP;
 	bool come;
+	bool swiperight1;
+	bool swiperight2;
+	bool swipeleft1;
+	bool swipeleft2;
 	//stuff for gestures
 	
 	HWND                    m_hWnd;
@@ -140,7 +144,7 @@ private:
     /// <returns>point in screen-space</returns>
     D2D1_POINT_2F           SkeletonToScreen(Vector4 skeletonPoint, int width, int height);
 
-	void					doGestures(Vector4 h, Vector4 l, Vector4 r, Vector4 w);
+	void					doGestures(Vector4 h, Vector4 l, Vector4 r, Vector4 w, Vector4 le, Vector4 re);
 
     /// <summary>
     /// Set the status bar message
