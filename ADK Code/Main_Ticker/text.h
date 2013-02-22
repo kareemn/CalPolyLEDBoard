@@ -1,3 +1,16 @@
+#ifndef TEXT_H
+#define TEXT_H
+
+#include "display.h"
+
+typedef enum {
+	TOP = 0,
+	MIDDLE = 1,
+	BOTTOM = 2
+} TextRow;
+
+void writeString(TextRow row, char *str, Color text_color, Color bg_color);
+
 const static unsigned char  font[] = {
 	0x00, 0x00, 0x00, 0x00, 0x00,   
 	0x3E, 0x5B, 0x4F, 0x5B, 0x3E, 	
@@ -256,3 +269,5 @@ const static unsigned char  font[] = {
 	0x00, 0x3C, 0x3C, 0x3C, 0x3C, 
 	0x00, 0x00, 0x00, 0x00, 0x00, 
 };
+
+#endif
