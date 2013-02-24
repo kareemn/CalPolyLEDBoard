@@ -2,7 +2,7 @@
 #include <arduino.h>
 
 volatile Color display[16][NUM_COLS];
-volatile int updateDisplay = 0; // used for
+volatile int updateDisplay = 0; // used for caching
 
 // sets an output pin low / high efficiently
 inline void pinOutput(int pin, int val)
@@ -47,6 +47,8 @@ void updateRow(int y) {
 void TC3_Handler()
 {
 	long dummy = REG_TC1_SR0;
+	if (!updateDisplay)
+		return;
 	pinOutput(OE_PIN, 0); // set OE low
 	for (int i = 0; i < 16; i++)
 	{
@@ -104,10 +106,12 @@ void initializeDisplay()
 
 void setPixel(int x, int y, Color color)
 {
-   if (y >= 32 || x >= NUM_COLS)
+   if (y >= 32 || x >= NUM_COLS || x < 0 || y < 0)
    {
       return;
    }
+	
+	updateDisplay = 1;
 
 	if (y >= 16)
 	{
