@@ -22,7 +22,6 @@
 
 
 typedef unsigned char Color3;
-typedef unsigned char Color16;
 
 typedef struct {
 	unsigned char red;
