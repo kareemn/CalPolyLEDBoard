@@ -94,14 +94,8 @@ void initializeDisplay()
 	pinOutput(OE_PIN, 0);
 	pinOutput(CLK_PIN, 1);
 	
+	clearDisplay();
 	startTimer(TC1, 0, TC3_IRQn, 100); //TC1 channel 0, the IRQ for that channel and the desired frequency
-	for (int i = 0; i < NUM_COLS; i++)
-	{
-		for (int j = 0; j < 32; j++)
-		{
-			setPixel(i, j, BLACK);
-		}
-	}
 }
 
 void setPixel(int x, int y, Color color)
@@ -134,14 +128,15 @@ void setPixel(int x, int y, Color color)
 	}
 }
 
-void fillScreen(int num, uint8_t color)
+void clearDisplay()
 {
 	int i, j;
-	for (i = num*SCREEN_WIDTH; i < (num+1)*SCREEN_WIDTH; i++)
+	for (i = 0; i < NUM_COLS; i++)
 	{
-		for (j = 0; j < SCREEN_HEIGHT; j++)
+		for (j = 0; j < 16; j++)
 		{
-			setPixel(i, j, color);
+			display[j][i] = 0;
 		}
 	}
+	updateDisplay = 1;
 }

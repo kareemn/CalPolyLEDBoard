@@ -4,18 +4,6 @@
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
-    QImage* image = new QImage("C:/Users/Brian/Desktop/Winter '13 - Schoolwork/CalPolyLEDBoard/mario.png");
-    QImage image2 = image->scaledToHeight(32);
-    qDebug() << image2.width() << image2.height();
-    for (int i = 0; i < image2.width(); i++)
-    {
-        for (int j = 0; j < image2.height(); j++)
-        {
-            QRgb pixel = image2.pixel(i, j);
-            qDebug() << qRed(pixel) << qGreen(pixel) << qBlue(pixel);
-        }
-    }
-
 //    // find all available com ports
 //    QStringList comPorts;
 //    foreach (QextPortInfo info, QextSerialEnumerator::getPorts())
@@ -27,14 +15,20 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 //    }
 //    qDebug() << comPorts;
 
-    /*port = new QextSerialPort("COM25");
-    port->setBaudRate(BAUD9600);
+    port = new QextSerialPort("COM26");
+    port->setBaudRate(BAUD2400);
     qDebug() << port->baudRate();
     connect(port, SIGNAL(readyRead()), this, SLOT(onDataAvailable()));
     port->open(QextSerialPort::ReadWrite);
     QByteArray str = QByteArray();
-    str.append((char)0x7f);
-    port->write(str);*/
+    str.append((char)0xc);
+    //str.append("Computer Engineerg Event Ticker | Capstone 2013\n\003By: Gomberg, Carteno, Tossoun, Burke, Zuffi\n\002Funding provided by \002G\004o\005o\002g\001l\004e");
+    str.append("\004CPE Student Town Hall | Thurs 2/28 11am-12pm | 38-204\n\002All CPE students are invited. Dr. Smith will provide\nan update on the CPE program.");
+    str.append((char)0x17);
+    qDebug() << port->write(str, str.length()) << str;
+
+    if (true)
+        return;
 
     ui->setupUi(this);
 
