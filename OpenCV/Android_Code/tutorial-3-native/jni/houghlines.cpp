@@ -25,15 +25,15 @@ const int CAMERA_NUM = 1;
 CvMemStorage* storage = 0;
 CvHaarClassifierCascade* cascade = 0;
 void detectAndDraw(IplImage *input_image);
-const char* cascade_name = "hand.xml";
+//const char* cascade_name = "hand.xml";
 
 //define the path to cascade file
-string cascadeName = "hand.xml";
+//string cascadeName = "hand.xml";
 
 extern "C" {
-JNIEXPORT void JNICALL Java_org_opencv_samples_tutorial3_Sample3Native_FindFeatures(JNIEnv*, jobject, jlong addrGray, jlong addrRgba);
+JNIEXPORT void JNICALL Java_org_opencv_samples_tutorial3_Sample3Native_FindFeatures(JNIEnv* jenv, jobject, jstring jFileName, jlong addrGray, jlong addrRgba);
 
-JNIEXPORT void JNICALL Java_org_opencv_samples_tutorial3_Sample3Native_FindFeatures(JNIEnv*, jobject, jlong addrGray, jlong addrRgba)
+JNIEXPORT void JNICALL Java_org_opencv_samples_tutorial3_Sample3Native_FindFeatures(JNIEnv* jenv, jobject, jstring jFileName, jlong addrGray, jlong addrRgba)
 {/*
 int main()
 {*/
@@ -41,10 +41,20 @@ int main()
 
         IplImage frame = *(Mat*)addrRgba;
 	IplImage *frame_copy = 0;
+
+	const char* cascade_name = jenv->GetStringUTFChars(jFileName, NULL);
 	cascade = (CvHaarClassifierCascade*) cvLoad(cascade_name, 0, 0, 0);
+
 	Mat& mGr  = *(Mat*)addrGray;
         Mat& mRgb = *(Mat*)addrRgba;
         vector<KeyPoint> v;
+
+	
+	if (!cascade)
+	{
+		fprintf( stderr, "ERROR: Could not load classifier cascade\n" );
+		return;
+	}
 
 	FastFeatureDetector detector(50);
 	detector.detect(mGr, v);
@@ -53,12 +63,6 @@ int main()
         	const KeyPoint& kp = v[i];
         	circle(mRgb, Point(kp.pt.x, kp.pt.y), 10, Scalar(255,0,0,255));
 	    }
-
-	if (!cascade)
-	{
-		fprintf( stderr, "ERROR: Could not load classifier cascade\n" );
-		return;
-	}
 
 	storage = cvCreateMemStorage(0);
 	/*CvCapture *capture = cvCaptureFromCAM(CAMERA_NUM);
