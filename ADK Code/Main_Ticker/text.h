@@ -9,7 +9,7 @@ typedef enum {
 	BOTTOM = 2
 } TextRow;
 
-void writeDisplay(char *);
+void writeDisplay(char *, int);
 void writeString(TextRow, char *);
 int writeScrollingText(char *, Color);
 void drawScrollingText(int, int);

@@ -23,7 +23,7 @@ void writeChar(int x, int y, char c, Color color)
 	}
 }
 
-void writeDisplay(char *str)
+void writeDisplay(char *str, int x_offset)
 {
 	Color color = WHITE;
 	char c;
@@ -41,7 +41,7 @@ void writeDisplay(char *str)
 		}
 		else
 		{
-			writeChar(x, y, c, color);
+			writeChar(x-x_offset, y, c, color);
 			x += 6;
 		}
 	}

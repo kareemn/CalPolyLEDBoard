@@ -1,7 +1,7 @@
 /****************************************************************************
 ** Meta object code from reading C++ file 'mainwindow.h'
 **
-** Created: Wed Jan 16 16:51:15 2013
+** Created: Wed Feb 27 16:00:59 2013
 **      by: The Qt Meta Object Compiler version 63 (Qt 4.8.1)
 **
 ** WARNING! All changes made in this file will be lost!
@@ -23,7 +23,7 @@ static const uint qt_meta_data_MainWindow[] = {
        6,       // revision
        0,       // classname
        0,    0, // classinfo
-       2,   14, // methods
+      10,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -33,6 +33,14 @@ static const uint qt_meta_data_MainWindow[] = {
  // slots: signature, parameters, type, tag, flags
       12,   11,   11,   11, 0x08,
       30,   11,   11,   11, 0x08,
+      55,   11,   11,   11, 0x08,
+      93,   11,   11,   11, 0x08,
+     130,   11,   11,   11, 0x08,
+     155,   11,   11,   11, 0x08,
+     182,   11,   11,   11, 0x08,
+     220,   11,   11,   11, 0x08,
+     249,   11,   11,   11, 0x08,
+     276,   11,   11,   11, 0x08,
 
        0        // eod
 };
@@ -40,6 +48,14 @@ static const uint qt_meta_data_MainWindow[] = {
 static const char qt_meta_stringdata_MainWindow[] = {
     "MainWindow\0\0onDataAvailable()\0"
     "on_save_button_clicked()\0"
+    "on_tableWidget_itemSelectionChanged()\0"
+    "on_description_editbox_textChanged()\0"
+    "closeEvent(QCloseEvent*)\0"
+    "on_delete_button_clicked()\0"
+    "on_announcement_editbox_textChanged()\0"
+    "on_delete_button_2_clicked()\0"
+    "on_save_button_2_clicked()\0"
+    "on_tableWidget_2_itemSelectionChanged()\0"
 };
 
 void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **_a)
@@ -50,10 +66,17 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         switch (_id) {
         case 0: _t->onDataAvailable(); break;
         case 1: _t->on_save_button_clicked(); break;
+        case 2: _t->on_tableWidget_itemSelectionChanged(); break;
+        case 3: _t->on_description_editbox_textChanged(); break;
+        case 4: _t->closeEvent((*reinterpret_cast< QCloseEvent*(*)>(_a[1]))); break;
+        case 5: _t->on_delete_button_clicked(); break;
+        case 6: _t->on_announcement_editbox_textChanged(); break;
+        case 7: _t->on_delete_button_2_clicked(); break;
+        case 8: _t->on_save_button_2_clicked(); break;
+        case 9: _t->on_tableWidget_2_itemSelectionChanged(); break;
         default: ;
         }
     }
-    Q_UNUSED(_a);
 }
 
 const QMetaObjectExtraData MainWindow::staticMetaObjectExtraData = {
@@ -88,9 +111,9 @@ int MainWindow::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 2)
+        if (_id < 10)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 2;
+        _id -= 10;
     }
     return _id;
 }

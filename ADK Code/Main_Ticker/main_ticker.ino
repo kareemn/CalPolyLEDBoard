@@ -29,7 +29,7 @@ void setup() {
 				// stop byte
 				recv_buffer[recv_index] = 0;
 				clearDisplay();
-				writeDisplay(recv_buffer);
+				writeDisplay(recv_buffer, 5);
 			}
 			else
 			{
