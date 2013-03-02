@@ -1,3 +1,6 @@
+#ifndef DISPLAY_H
+#define DISPLAY_H
+
 #define R1_PIN		30	// PC28
 #define G1_PIN		31	// PC27
 #define B1_PIN		32	// PC26
@@ -11,15 +14,14 @@
 #define LAT_PIN	43	// PB1
 #define OE_PIN		44 // PA29
 
-#define BLACK	0x0
-#define RED		0x4
-#define GREEN	0x2
-#define BLUE	0x1
-#define YELLOW	(RED | GREEN)
-#define PURPLE	(RED | BLUE)
-#define CYAN	(BLUE | GREEN)
-#define WHITE	(RED | BLUE | GREEN)
-
+#define BLACK	{0, 0, 0}
+#define RED		{15, 0, 0}
+#define GREEN	{0, 15, 0}
+#define BLUE	{0, 0, 15}
+#define YELLOW	{15, 15, 0}
+#define PURPLE	{15, 0, 15}
+#define CYAN	{0, 15, 15}
+#define WHITE	{15, 15, 15}
 
 typedef unsigned char Color3;
 
@@ -32,3 +34,8 @@ typedef struct {
 void initializeDisplay();
 void clearDisplay();
 void setPixel(int, int, Color);
+void drawLogo();
+int updateTimerCount();
+
+extern volatile int elapsed_seconds;
+#endif
