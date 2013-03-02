@@ -1,7 +1,9 @@
 #include "display.h"
+#include "text.h"
 #include <arduino.h>
 
 volatile Color3 display[15][32][32];
+volatile int timer_count = 0;
 
 static inline void pinOutput(int pin, int val)
 {
@@ -23,11 +25,11 @@ void updateRow(int y, volatile Color3 frame[32][32])
 			PIOC->PIO_CODR = 0x7 << 26;
 			PIOC->PIO_SODR = frame[x][y] << 26;
 			int tmp = 0;
-			if (frame[x][y+8]&RED)
+			if (frame[x][y+8]&0x4)
 				tmp |= (1 << 8);
-			if (frame[x][y+8]&GREEN)
+			if (frame[x][y+8]&0x2)
 				tmp |= (1 << 9);
-			if (frame[x][y+8]&BLUE)
+			if (frame[x][y+8]&0x1)
 				tmp |= (1 << 6);
 			PIOB->PIO_SODR = tmp;
 		}
@@ -37,11 +39,11 @@ void updateRow(int y, volatile Color3 frame[32][32])
 			PIOC->PIO_CODR = 0x7 << 26;
 			PIOC->PIO_SODR = frame[x-32][y+16] << 26;
 			int tmp = 0;
-			if (frame[x-32][y+24]&RED)
+			if (frame[x-32][y+24]&0x4)
 				tmp |= (1 << 8);
-			if (frame[x-32][y+24]&GREEN)
+			if (frame[x-32][y+24]&0x2)
 				tmp |= (1 << 9);
-			if (frame[x-32][y+24]&BLUE)
+			if (frame[x-32][y+24]&0x1)
 				tmp |= (1 << 6);
 			PIOB->PIO_SODR = tmp;
 		}
@@ -57,11 +59,17 @@ void updateRow(int y, volatile Color3 frame[32][32])
 }
 
 //TC1 ch 0
-volatile int frame = 0;
+volatile int frame = 0, ticks = 0, elapsed_seconds = 0;
+
 void TC3_Handler()
 {
 	long dummy = REG_TC1_SR0;
-	pinOutput(13, 1);
+	ticks++;
+	if (!(ticks%1000))
+	{
+		elapsed_seconds++;
+	}
+	//pinOutput(13, 1);
 	pinOutput(OE_PIN, 0);
 	for (int y = 0; y < 8; y++)
 	{
@@ -69,7 +77,7 @@ void TC3_Handler()
 	}
 	pinOutput(OE_PIN, 1);
 	frame = (frame + 1) % 15;
-	pinOutput(13, 0);
+	//pinOutput(13, 0);
 }
 
 void startTimer(Tc *tc, uint32_t channel, IRQn_Type irq, uint32_t frequency) {
@@ -92,27 +100,27 @@ void setPixel(int x, int y, Color color)
 		display[frame][x][y] = 0;
 		if (color.red > frame)
 		{
-			display[frame][x][y] = RED;
+			display[frame][x][y] |= 0x4;
 		}
 		if (color.green > frame)
 		{
-			display[frame][x][y] = GREEN;
+			display[frame][x][y] |= 0x2;
 		}
 		if (color.blue > frame)
 		{
-			display[frame][x][y] = BLUE;
+			display[frame][x][y] |= 0x1;
 		}
 	}
 }
 
-void fillScreen(Color color)
+void clearDisplay()
 {
 	int i, j;
 	for (i = 0; i < 32; i++)
 	{
 		for (j = 0; j < 32; j++)
 		{
-			setPixel(i, j, color);
+			setPixel(i, j, {0, 0, 0});
 		}
 	}
 }
@@ -141,23 +149,87 @@ void initializeDisplay()
 	pinOutput(LAT_PIN, 0);
 	pinOutput(OE_PIN, 0);
 	pinOutput(CLK_PIN, 1);
-	
-	int r, g, b;
-	for (int i = 0; i < 32; i++)
+
+	startTimer(TC1, 0, TC3_IRQn, 1000);
+
+	clearDisplay();
+}
+
+void drawLogo()
+{
+/* Set up white background */
+	for(int x = 0; x<32; x++)
 	{
-		for (int j = 0; j < 32; j++)
+		for(int y = 0; y<16; y++)
 		{
-			Color c = {i>>1, j>>1, i&0xf};
-			setPixel(i, j, c);
+			setPixel(x, y, {1,1,1});
 		}
 	}
 	
-	// Color c1 = {0x1, 0, 0};
-	// Color c2 = {0, 0x2, 0};
-	// fillScreen(c1);
-	// for (int i = 0; i < 32; i++)
-		// setPixel(i, i, c2);
+	/* Set up clock frame */
+	for(int a = 5; a < 27; a++)
+	{
+		setPixel(a, 2, BLACK);
+		setPixel(a, 12, BLACK);
+	}
 	
-	startTimer(TC1, 0, TC3_IRQn, 1000);
-	while(1);
+	/* Sets up clock logo background, and left and right sides of clock frame */
+	for(int i = 3; i<12; i++)
+	{	
+		setPixel(4, i, BLACK);
+		setPixel(27, i, BLACK);
+		for(int j = 5; j<27; j++)
+		{
+			setPixel(j, i, {2,2,5});
+		}
+	}
+	
+	/* Sets clock stand */
+	for(int k = 8; k<24; k++)
+		setPixel(k, 13, {2,2,5}); 
+	
+	/* This is 'C' */
+	for(int l = 5; l<10; l++)
+		setPixel(7, l, GREEN);
+	
+	for(int m = 8; m<12; m++)
+	{
+		setPixel(m, 4, GREEN);
+		setPixel(m, 10, GREEN);
+	}
+	
+	/* This is the colon */
+	setPixel(13, 5, GREEN);
+	setPixel(13, 9, GREEN);
+	
+	/* This is the 'P' */
+	for(int n = 4; n<11; n++)
+		setPixel(15, n, GREEN);
+		
+	for(int o = 16; o<19; o++)
+	{
+		setPixel(o, 4, GREEN);
+		setPixel(o, 7, GREEN);
+	}
+	
+	for(int p = 5; p<7; p++)
+		setPixel(19, p, GREEN);
+		
+	/* This is the 'E' */
+	for(int q = 4; q<11; q++)
+		setPixel(21, q, GREEN);
+		
+	for(int r = 22; r<26; r++)
+	{
+		setPixel(r, 4, GREEN);
+		setPixel(r, 10, GREEN);
+	}
+	
+	for(int s = 22; s<25; s++)
+		setPixel(s, 7, GREEN);
+}
+
+int updateTimerCount()
+{
+	return timer_count;
 }

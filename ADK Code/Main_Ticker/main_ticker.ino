@@ -10,6 +10,7 @@ void setup() {
 	char recv_buffer[100];
 	int recv_index = 0;
 	int c;
+	int offset = 0;
 	while(1)
 	{
 		if (Serial3.available())
@@ -23,13 +24,15 @@ void setup() {
 			{
 				// start byte
 				recv_index = 0;
+				while(!Serial3.available());
+				offset = Serial3.read();
 			}
 			else if (c == 0x17)
 			{
 				// stop byte
 				recv_buffer[recv_index] = 0;
 				clearDisplay();
-				writeDisplay(recv_buffer, 5);
+				writeDisplay(recv_buffer, 6*offset);
 			}
 			else
 			{
