@@ -130,3 +130,35 @@ void drawScrollingText(int window_x, int text_size)
 		}
 	}
 }
+
+void transitionUp(int x, int y, char *str)
+{
+	Color color = WHITE;
+	char c;
+	int offset = 0;
+	int a = x;
+	int b = y;
+	
+	for(int i = 0; i<16; i++)
+	{
+		clearDisplay();
+		offset += 2;
+		while ((c = *(str++)))
+		{
+			if (c <= WHITE)
+			{
+				color = c;
+			}
+			else if (c == '\n')
+			{
+				a = 1;
+				b += 10;
+			}
+			else
+			{
+				writeChar(a, b-offset, c, color);
+				a += 6;
+			}
+		}
+	}
+}
