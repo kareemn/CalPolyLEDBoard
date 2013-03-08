@@ -7,7 +7,8 @@ void setup() {
 	
 	//writeDisplay("\004CPE Student Town Hall | Thurs 2/28 11am-12pm | 38-204\n\002All CPE students are invited. Dr. Smith will provide\nan update on the CPE program.");
 	
-	char recv_buffer[100];
+	char recv_buffer[200];
+	char temp_buffer[200];
 	int recv_index = 0;
 	int c;
 	int offset = 0, transition = 0;
@@ -29,24 +30,26 @@ void setup() {
 				recv_index = 0;
 				while(!Serial3.available());
 				offset = Serial3.read();
-				while(!Serial3.available());
-				transition = Serial3.read();
 			}
 			else if (c == 0x17)
 			{
 				// stop byte
 				recv_buffer[recv_index] = 0;
+				clearDisplay();
+				writeDisplay(recv_buffer, 2*offset);
+				// transitionLeft(1, 2, temp_buffer);
+				// transitionLeft(321, 2, recv_buffer);
 				//transition up
-				if(transition == 1)
+				if(offset == 201)
 				{
 					transitionUp(1, 2, temp_buffer);
 					transitionUp(1, 34, recv_buffer);
 				}
-				else
-				{
-					clearDisplay();
-					writeDisplay(recv_buffer, 2*offset);
-				}
+				// else
+				// {
+					// clearDisplay();
+					// writeDisplay(recv_buffer, 2*offset);
+				// }
 			}
 			else
 			{

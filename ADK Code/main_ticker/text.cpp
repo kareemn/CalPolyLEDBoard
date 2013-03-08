@@ -1,4 +1,5 @@
 #include "text.h"
+#include <arduino.h>
 
 void writeChar(int x, int y, char c, Color color)
 {
@@ -160,5 +161,40 @@ void transitionUp(int x, int y, char *str)
 				a += 6;
 			}
 		}
+		delay(100);
+	}
+}
+
+void transitionLeft(int x, int y, char *str)
+{
+	Color color = WHITE;
+	char c;
+	int offset = 0;
+	int a = x;
+	int b = y;
+	
+	for(int i = 0; i<160; i++)
+	{
+		clearDisplay();
+		offset += 2;
+		char *temp = str;
+		while ((c = *(temp++)))
+		{
+			if (c <= WHITE)
+			{
+				color = c;
+			}
+			else if (c == '\n')
+			{
+				a = 1;
+				b += 10;
+			}
+			else
+			{
+				writeChar(a-offset, b, c, color);
+				a += 6;
+			}
+		}
+		delay(100);
 	}
 }

@@ -1,9 +1,13 @@
 #include "display.h"
 #include "text.h"
 
-volatile char messages[10][200];
-volatile char officehours[10][200];
+#define EVENTS_MODE 0
+#define OFFICE_HOUR_MODE 1
+
+char messages[10][200];
+char officehours[10][200];
 volatile int e = 0, o = 0, a = 0, type = 0, char_count, offset = 0;
+volatile int state = EVENTS_MODE;
 
 void setup() {
 	initializeDisplay();
@@ -16,6 +20,9 @@ void setup() {
 	Serial3.write(0xc);
 	Serial3.write(0x17);
 		
+	strcpy(officehours[0], "Lupo, in the CS offices, sometime during the week");
+	o++;
+		
 	int i = 0;
 	int count = -1;
 	while(1)
@@ -23,41 +30,69 @@ void setup() {
 		checkSerial2();
 		if(Serial1.available())
 		{
-			offset = Serial1.read();
-			if(offset == 201)
+			offset = (unsigned char)Serial1.read();
+			Serial.println(offset);
+			/* Register swipe up and in events mode*/
+			if(offset == 201 && state == EVENTS_MODE)
 			{
-				
+				i = 0;
+				if(o > 0)
+				{
+					Serial3.write(0xc);
+					Serial3.write(offset);
+					Serial3.write((char *)officehours[i++]);
+					Serial3.write(0x17);
+				}
+				elapsed_seconds = 0;
+				state = OFFICE_HOUR_MODE;
+				offset = 0;
+				count = 0;
 			}
-			else if(offset == 202)
+			/* If swipe up and in office hour mode */
+			else if(offset == 201 && state == OFFICE_HOUR_MODE)
 			{
-				// Serial3.write(0xc);
-				// char zero = 0;
-				// Serial3.write(zero);
-				// Serial3.write(LEFT);
-				// Serial3.write((char *)messages[++i]);
-				// Serial3.write(0x17);
-				// i++;
+				elapsed_seconds = 0;
+				i = 0;
+				if(o > 0)
+				{
+					Serial3.write(0xc);
+					Serial3.write(202);
+					Serial3.write(1);
+					Serial3.write((char *)messages[i++]);
+					Serial3.write(0x17);
+				}
+				state = EVENTS_MODE;
+				offset = 0;
+				count = 0;
+			}
+			/* IF swipe left */
+			else if(offset == 203)
+			{
+				elapsed_seconds = 0;
+				if(i >= e)
+					i = 0;
+				if(o > 0)
+				{
+					Serial3.write(0xc);
+					Serial3.write(203);
+					char zero = 0;
+					Serial3.write(zero);
+					Serial3.write((char *)messages[i++]);
+					Serial3.write(0x17);
+				}
+				state = EVENTS_MODE;
+				offset = 0;
+				count = 0;
 			}
 		}
-			
+		
 		writeChar(0, 16, (char)(elapsed_seconds+'0'), WHITE);
-		if(i >= e)
+		
+		if(state == EVENTS_MODE)
 		{
-			i = 0;
-			// if(i == e)
-			// {
-				// writeChar(0, 24, 'O', WHITE);
-				// Serial3.write(0xc);
-				// Serial3.write(elapsed_seconds);
-				// Serial3.write("Office Hours");
-				// Serial3.write(0x17);
-			// }
-			// i = i + elapsed_seconds;
-			// if(i == e + 10)
-				// i = 0;
-		}
-		else
-		{
+			if(i >= e)
+				i = 0;
+
 			if(elapsed_seconds >= 10)
 			{
 				elapsed_seconds = 0;
@@ -67,10 +102,11 @@ void setup() {
 					Serial3.write(0xc);
 					char zero = 0;
 					Serial3.write(zero);
-					Serial3.write(LEFT);
 					Serial3.write((char *)messages[i]);
 					Serial3.write(0x17);
 					i++;
+					count = 0;
+					offset = 0;
 				}
 			}
 			else if(offset != count)
@@ -79,6 +115,40 @@ void setup() {
 					Serial3.write(0xc);
 					Serial3.write(offset);
 					Serial3.write((char *)messages[i]);
+					Serial3.write(0x17);
+					count = offset;
+			}
+		}
+		else if(state == OFFICE_HOUR_MODE)
+		{
+			if(i >= o)
+				i = 0;
+				
+			if(elapsed_seconds >= 30)
+			{
+				elapsed_seconds = 0;
+				if(i >= e)
+					i = 0;
+				if(o > 0)
+				{
+					writeChar(0, 24, (char)(i+48), WHITE);
+					Serial3.write(0xc);
+					char zero = 0;
+					Serial3.write(zero);
+					Serial3.write((char *)officehours[i++]);
+					Serial3.write(0x17);
+					i++;
+					count = 0;
+					offset = 0;
+				}
+				state = EVENTS_MODE;
+			}
+			else if(offset != count)
+			{
+					writeChar(0, 24, (char)(i+48), WHITE);
+					Serial3.write(0xc);
+					Serial3.write(offset);
+					Serial3.write((char *)officehours[i]);
 					Serial3.write(0x17);
 					count = offset;
 			}
@@ -122,27 +192,19 @@ void checkSerial2()
 				officehours[o++][char_count++] = 0;
 				char_count = 0;
 			}
-			
+			Serial.print(" ");
+			Serial.println(e);
 		}
 		else if(c == 0x17) 
 		{
 			// stop byte
-			if(type == 'E')
-			{
-				messages[e++][char_count++] = 0;
-				char_count = 0;
-			}
-			else if(type == 'O')
-			{
-				officehours[o++][char_count++] = 0;
-				char_count = 0;
-			}
 			type = 0;
-			break;
+			Serial.println(e);
+			Serial.println(o);
 		}
 		else
 		{
-			Serial.print(c);
+			//Serial.print(c);
 			if(type == 'E')
 				messages[e][char_count++] = c;
 			else if(type == 'O')
