@@ -24,8 +24,8 @@ void setup() {
 			else if (c == 0xc)
 			{
 				// start byte
-				for(int j = 0; j<recv_index; j++)
-					temp_buffer[j] = recv_buffer[j];
+				 for(int j = 0; j<recv_index; j++)
+					 temp_buffer[j] = recv_buffer[j];
 					
 				recv_index = 0;
 				while(!Serial3.available());
@@ -35,6 +35,7 @@ void setup() {
 			{
 				// stop byte
 				recv_buffer[recv_index] = 0;
+					
 				// clearDisplay();
 				// writeDisplay(recv_buffer, 2*offset);
 				// transitionLeft(1, 2, temp_buffer);
@@ -49,7 +50,7 @@ void setup() {
 				}
 				else if(offset == 202)
 				{
-					transitionRight(1, 2, temp_buffer);
+					transitionRight(1, 2, recv_buffer);
 					delay(800);
 					transitionRight(1, 2, recv_buffer);
 					delay(800);
