@@ -24,11 +24,10 @@ void writeChar(int x, int y, char c, Color color)
 	}
 }
 
-void writeDisplay(char *str, int x_offset)
+void writeDisplay(int x, int y, int x_offset, char *str)
 {
 	Color color = WHITE;
 	char c;
-	int x=1, y=2;
 	while ((c = *(str++)))
 	{
 		if (c <= WHITE)
@@ -48,25 +47,49 @@ void writeDisplay(char *str, int x_offset)
 	}
 }
 
-void writeString(TextRow row, char *str)
-{
-	Color color = WHITE;
-	char c;
-	int x = 1;
-	int y = 2 + (row * 10);
-	while ((c = *(str++)))
-	{
-		if (c <= WHITE)
-		{
-			color = c;
-		}
-		else
-		{
-			writeChar(x, y, c, color);
-			x += 6;
-		}
-	}
-}
+// void writeDisplay2(char *str, int x_offset)
+// {
+	// Color color = WHITE;
+	// char c;
+	// int x=1, y=2;
+	// while ((c = *(str++)))
+	// {
+		// if (c <= WHITE)
+		// {
+			// color = c;
+		// }
+		// else if (c == '\n')
+		// {
+			// x = 1;
+			// y += 10;
+		// }
+		// else
+		// {
+			// writeChar(x-x_offset, y, c, color);
+			// x += 6;
+		// }
+	// }
+// }
+
+// void writeString(TextRow row, char *str)
+// {
+	// Color color = WHITE;
+	// char c;
+	// int x = 1;
+	// int y = 2 + (row * 10);
+	// while ((c = *(str++)))
+	// {
+		// if (c <= WHITE)
+		// {
+			// color = c;
+		// }
+		// else
+		// {
+			// writeChar(x, y, c, color);
+			// x += 6;
+		// }
+	// }
+// }
 
 volatile Color display2[1800][8];
 
@@ -144,7 +167,8 @@ void transitionUp(int x, int y, char *str)
 	{
 		clearDisplay();
 		offset += 2;
-		while ((c = *(str++)))
+		char *temp = str;
+		while ((c = *(temp++)))
 		{
 			if (c <= WHITE)
 			{
@@ -161,40 +185,19 @@ void transitionUp(int x, int y, char *str)
 				a += 6;
 			}
 		}
-		delay(100);
+		delay(10);
 	}
 }
 
-void transitionLeft(int x, int y, char *str)
+void transitionRight(int x, int y, char *str)
 {
-	Color color = WHITE;
-	char c;
-	int offset = 0;
-	int a = x;
-	int b = y;
+	int offset = 0; 
 	
 	for(int i = 0; i<160; i++)
 	{
 		clearDisplay();
 		offset += 2;
-		char *temp = str;
-		while ((c = *(temp++)))
-		{
-			if (c <= WHITE)
-			{
-				color = c;
-			}
-			else if (c == '\n')
-			{
-				a = 1;
-				b += 10;
-			}
-			else
-			{
-				writeChar(a-offset, b, c, color);
-				a += 6;
-			}
-		}
-		delay(100);
+		writeDisplay(x, y, 2*offset, str);
+		delay(5);
 	}
 }

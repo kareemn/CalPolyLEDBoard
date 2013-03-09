@@ -35,21 +35,30 @@ void setup() {
 			{
 				// stop byte
 				recv_buffer[recv_index] = 0;
-				clearDisplay();
-				writeDisplay(recv_buffer, 2*offset);
+				// clearDisplay();
+				// writeDisplay(recv_buffer, 2*offset);
 				// transitionLeft(1, 2, temp_buffer);
 				// transitionLeft(321, 2, recv_buffer);
 				//transition up
 				if(offset == 201)
 				{
-					transitionUp(1, 2, temp_buffer);
-					transitionUp(1, 34, recv_buffer);
+					//transitionUp(1, 2, temp_buffer);
+					//transitionUp(1, 34, recv_buffer);
+					clearDisplay();
+					writeDisplay(1, 2, 0, recv_buffer);
 				}
-				// else
-				// {
-					// clearDisplay();
-					// writeDisplay(recv_buffer, 2*offset);
-				// }
+				else if(offset == 202)
+				{
+					transitionRight(1, 2, temp_buffer);
+					delay(800);
+					transitionRight(1, 2, recv_buffer);
+					delay(800);
+				}
+				else
+				{
+					clearDisplay();
+					writeDisplay(1, 2, 2*offset, recv_buffer);
+				}
 			}
 			else
 			{

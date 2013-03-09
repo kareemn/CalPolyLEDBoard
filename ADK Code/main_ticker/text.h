@@ -9,12 +9,12 @@ typedef enum {
 	BOTTOM = 2
 } TextRow;
 
-void writeDisplay(char *, int);
+void writeDisplay(int, int, int, char*);
 void writeString(TextRow, char *);
 int writeScrollingText(char *, Color);
 void drawScrollingText(int, int);
 void transitionUp(int x, int y, char *str);
-void transitionLeft(int x, int y, char *str);
+void transitionRight(int x, int y, char *str);
 
 const static unsigned char  font[] = {
 	0x00, 0x00, 0x00, 0x00, 0x00, 

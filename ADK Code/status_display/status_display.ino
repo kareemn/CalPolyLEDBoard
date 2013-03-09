@@ -56,7 +56,7 @@ void setup() {
 				if(o > 0)
 				{
 					Serial3.write(0xc);
-					Serial3.write(202);
+					Serial3.write(201);
 					Serial3.write(1);
 					Serial3.write((char *)messages[i++]);
 					Serial3.write(0x17);
@@ -65,19 +65,38 @@ void setup() {
 				offset = 0;
 				count = 0;
 			}
-			/* IF swipe left */
+			/* If swipe left */
 			else if(offset == 203)
 			{
 				elapsed_seconds = 0;
 				if(i >= e)
 					i = 0;
-				if(o > 0)
+				if(e > 0)
 				{
 					Serial3.write(0xc);
 					Serial3.write(203);
 					char zero = 0;
 					Serial3.write(zero);
 					Serial3.write((char *)messages[i++]);
+					Serial3.write(0x17);
+				}
+				state = EVENTS_MODE;
+				offset = 0;
+				count = 0;
+			}
+			/* If swipe right */
+			else if(offset == 202)
+			{
+				elapsed_seconds = 0;
+				if(i < 0)
+					i = e-1;
+				if(e > 0)
+				{
+					Serial3.write(0xc);
+					Serial3.write(202);
+					char zero = 0;
+					Serial3.write(zero);
+					Serial3.write((char *)messages[i--]);
 					Serial3.write(0x17);
 				}
 				state = EVENTS_MODE;
