@@ -2,7 +2,8 @@
 #include "display.h"
 
 void setup() {
-	Serial3.begin(2400);
+	Serial3.begin(3000);
+	Serial.begin(57600);
 	initializeDisplay();
 	
 	//writeDisplay("\004CPE Student Town Hall | Thurs 2/28 11am-12pm | 38-204\n\002All CPE students are invited. Dr. Smith will provide\nan update on the CPE program.");
@@ -24,8 +25,19 @@ void setup() {
 			else if (c == 0xc)
 			{
 				// start byte
-				 for(int j = 0; j<recv_index; j++)
+				int j = 0;
+				for(int i = 0; i<200; i++)
+					temp_buffer[i] = 0;
+					
+				
+				for(j = 0; recv_buffer[j]; j++)
 					 temp_buffer[j] = recv_buffer[j];
+				
+				temp_buffer[j] = 0;
+				
+				Serial.println(recv_index);
+				Serial.println(recv_buffer);
+				Serial.println(temp_buffer);
 					
 				recv_index = 0;
 				while(!Serial3.available());
@@ -36,30 +48,35 @@ void setup() {
 				// stop byte
 				recv_buffer[recv_index] = 0;
 					
-				// clearDisplay();
-				// writeDisplay(recv_buffer, 2*offset);
+				clearDisplay();
+				writeDisplay(1 + (2*offset), 2, recv_buffer);
 				// transitionLeft(1, 2, temp_buffer);
 				// transitionLeft(321, 2, recv_buffer);
 				//transition up
-				if(offset == 201)
+				// if(offset == 201)
+				// {
+					// //transitionUp(1, 2, temp_buffer);
+					// //transitionUp(1, 34, recv_buffer);
+					// clearDisplay();
+					// writeDisplay(1, 2, recv_buffer);
+				// }
+				if(offset == 202)
 				{
-					//transitionUp(1, 2, temp_buffer);
-					//transitionUp(1, 34, recv_buffer);
-					clearDisplay();
-					writeDisplay(1, 2, 0, recv_buffer);
+					transitionRight(1, 2, temp_buffer);
+					transitionRight(-319, 2, recv_buffer);
+					delay(500);
 				}
-				else if(offset == 202)
+				else if(offset == 203)
 				{
-					transitionRight(1, 2, recv_buffer);
-					delay(800);
-					transitionRight(1, 2, recv_buffer);
-					delay(800);
+					transitionLeft(1, 2, temp_buffer);
+					transitionLeft(321, 2, recv_buffer);
+					delay(500);
 				}
-				else
-				{
-					clearDisplay();
-					writeDisplay(1, 2, 2*offset, recv_buffer);
-				}
+				// else
+				// {
+					// clearDisplay();
+					// writeDisplay(1 + (2*offset), 2, recv_buffer);
+				// }
 			}
 			else
 			{

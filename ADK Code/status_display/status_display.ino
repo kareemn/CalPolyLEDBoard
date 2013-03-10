@@ -13,9 +13,9 @@ void setup() {
 	initializeDisplay();
 
 	drawLogo();
-	Serial.begin(2400);
+	Serial.begin(57600);
 	Serial1.begin(57600);
-	Serial3.begin(2400);
+	Serial3.begin(3000);
 	Serial2.begin(2400);
 	Serial3.write(0xc);
 	Serial3.write(0x17);
@@ -132,8 +132,7 @@ void setup() {
 				{
 					writeChar(0, 24, (char)(i+48), WHITE);
 					Serial3.write(0xc);
-					char zero = 0;
-					Serial3.write(zero);
+					Serial3.write(203);
 					Serial3.write((char *)messages[i]);
 					Serial3.write(0x17);
 					i++;

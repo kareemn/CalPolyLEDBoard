@@ -134,3 +134,44 @@ void clearDisplay()
 		}
 	}
 }
+
+void shiftDisplayLeft()
+{
+	for (int col = 0; col < 320; col++)
+	{
+		if (col == 319)
+		{
+			for (int row = 0; row < 16; row++)
+			{
+				display[row][col] = 0;
+			}
+		}
+		else
+		{
+			for (int row = 0; row < 16; row++)
+			{
+				display[row][col] = display[row][col+1];
+			}
+		}
+	}
+}
+void shiftDisplayRight()
+{
+	for (int col = 319; col >= 0; col--)
+	{
+		if (col == 0)
+		{
+			for (int row = 0; row < 16; row++)
+			{
+				display[row][col] = 0;
+			}
+		}
+		else
+		{
+			for (int row = 0; row < 16; row++)
+			{
+				display[row][col] = display[row][col-1];
+			}
+		}
+	}
+}

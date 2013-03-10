@@ -35,3 +35,5 @@ typedef unsigned char Color;
 void initializeDisplay();
 void clearDisplay();
 void setPixel(int, int, Color);
+void shiftDisplayLeft();
+void shiftDisplayRight();
