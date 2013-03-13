@@ -33,6 +33,7 @@ import android.os.Message;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.WindowManager;
 import android.widget.Toast;
 import java.util.Calendar;
@@ -216,6 +217,18 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         Imgproc.erode(mFGMask, mFGMask, new Mat());
         Imgproc.dilate(mFGMask, mFGMask, new Mat());
         mGray.copyTo(mFGMask, mFGMask);
+    }
+    
+    /*
+     * This is primarily here for debugging.
+     * If you touch the screen, it should force show the low-power screen.
+     * @see android.app.Activity#onTouchEvent(android.view.MotionEvent)
+     */
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        Intent myIntent = new Intent(this, LowPowerActivity.class);
+        startActivity(myIntent);
+        return super.onTouchEvent(event);
     }
     
     public boolean timeForLowPowerMode() {
