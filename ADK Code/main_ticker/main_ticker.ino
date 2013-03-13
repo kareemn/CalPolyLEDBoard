@@ -64,19 +64,31 @@ void setup() {
 				{
 					transitionRight(1, 2, temp_buffer);
 					transitionRight(-319, 2, recv_buffer);
-					delay(500);
+					delay(100);
 				}
 				else if(offset == 203)
 				{
 					transitionLeft(1, 2, temp_buffer);
 					transitionLeft(321, 2, recv_buffer);
-					delay(500);
+					delay(100);
+				}
+				else if(offset == 201)
+				{
+					transitionUp(1, 2, temp_buffer);
+					delay(100);
+					transitionUp(1, 34, recv_buffer);
+					delay(100);
 				}
 				// else
 				// {
 					// clearDisplay();
 					// writeDisplay(1 + (2*offset), 2, recv_buffer);
 				// }
+				
+				while(Serial3.available())
+					Serial3.read();
+					
+				Serial3.write('A');
 			}
 			else
 			{

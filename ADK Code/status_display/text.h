@@ -10,7 +10,8 @@ typedef enum {
 } TextRow;
 
 void writeString(TextRow, char *);
-void writeChar(int x, int y, char c, Color color);
+void writeChar(int x, int y, char c);
+void chprintf(int x, int y, const char *fmt, ...);
 
 const static unsigned char  font[] = {
 	0x00, 0x00, 0x00, 0x00, 0x00, 

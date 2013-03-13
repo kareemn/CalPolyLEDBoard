@@ -175,3 +175,8 @@ void shiftDisplayRight()
 		}
 	}
 }
+
+void shiftDisplayUp()
+{
+
+}
