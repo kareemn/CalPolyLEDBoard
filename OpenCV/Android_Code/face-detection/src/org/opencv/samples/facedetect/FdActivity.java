@@ -76,12 +76,6 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     private int 					bgCount;
     private ArrayList<Integer>		compare;
     private Handler                 toastTeller;
-    
-    //phase correlation variables
-    private Mat lastFrame;
-    private Mat currentFrame;
-    private Point subPixel;
-
 
     private BaseLoaderCallback  mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
@@ -197,9 +191,6 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         sub.setInt("nmixtures", 1);
     	bgCount = 0;
     	compare = new ArrayList<Integer>();
-    	//
-    	lastFrame = new Mat();
-    	currentFrame = new Mat();
     }
 
     public void onCameraViewStopped() {
@@ -245,15 +236,15 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
         
-        //mRgba = inputFrame.rgba();
+        mRgba = inputFrame.rgba();
         mGray = inputFrame.gray();
-        //mFGMask = mGray;
+        mFGMask = mGray;
         
         //
         if(timeForLowPowerMode())
             return mGray; 
         
-        if (mDetectorType == JAVA_DETECTOR) {
+        /*if (mDetectorType == JAVA_DETECTOR) {
           //backgroundFilter the first NUM_FRAMES_TO_LEARN_FROM
             if(bgCount++ < NUM_FRAMES_TO_LEARN_FROM)
                 learnBackground(0.0);
@@ -268,7 +259,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         }
         else {
             Log.e(TAG, "Detection method is not selected!");
-        }
+        }*/
         
         
         //trial junk

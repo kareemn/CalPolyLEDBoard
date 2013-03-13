@@ -21,10 +21,8 @@
         </activity>
         <activity
             android:name="org.opencv.samples.facedetect.LowPowerActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_low_power"
-            android:parentActivityName="org.opencv.samples.facedetect.FdActivity"
-            android:theme="@style/FullscreenTheme" >
+            android:parentActivityName="org.opencv.samples.facedetect.FdActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="org.opencv.samples.facedetect.FdActivity" />
