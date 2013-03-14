@@ -14,14 +14,16 @@ import android.os.Build;
 public class LowPowerActivity extends Activity {
 
     //my variables
-    protected static final int HIGH_SEC = 30;
+    protected static final int HIGH_HOUR = 19;
+    private static final int MINUTES_BTWN_CHECKS = 10;
+    private static final int MS_PER_MIN = 60000;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_low_power);
         // Show the Up button in the action bar.
-        //setupActionBar(); this causes a nullPointerException
+        //setupActionBar(); //this causes a nullPointerException
         
         new Handler().postDelayed(new Runnable() {
             public void run() {
@@ -72,12 +74,12 @@ public class LowPowerActivity extends Activity {
     public void wakeOnTime() {
         Calendar cal = Calendar.getInstance();
         System.out.println("entering while loop");
-        while(cal.get(Calendar.SECOND) >= HIGH_SEC) {
+        while(cal.get(Calendar.HOUR) >= HIGH_HOUR) {
             cal = Calendar.getInstance();
             //debug info
-            System.out.println(cal.get(Calendar.SECOND));
-            //dont check too often: every 1000 ms
-            try { Thread.currentThread().sleep(1000); }
+            System.out.println(cal.get(Calendar.HOUR));
+            //dont check too often
+            try { Thread.currentThread().sleep(MINUTES_BTWN_CHECKS * MS_PER_MIN); }
             catch ( Exception e ) { }
         }
         finish();

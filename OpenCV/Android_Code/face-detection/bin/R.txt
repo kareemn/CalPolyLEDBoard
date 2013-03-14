@@ -6,7 +6,8 @@ int color black_overlay 0x7f060000
 int dimen activity_horizontal_margin 0x7f070000
 int dimen activity_vertical_margin 0x7f070001
 int drawable icon 0x7f020000
-int drawable power_saver 0x7f020001
+int drawable logov3 0x7f020001
+int drawable power_saver 0x7f020002
 int id action_settings 0x7f050005
 int id any 0x7f050000
 int id back 0x7f050001

@@ -4,7 +4,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
+import java.io.OutputStream;
+import java.util.UUID;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
@@ -13,7 +14,6 @@ import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfRect;
-import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
@@ -25,57 +25,85 @@ import org.opencv.video.BackgroundSubtractorMOG;
 
 
 import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.WindowManager;
-import android.widget.Toast;
+
 import java.util.Calendar;
 
 public class FdActivity extends Activity implements CvCameraViewListener2 {
 
-    private static final String    TAG                 = "OCVSample::Activity";
-    private static final Scalar    FACE_RECT_COLOR     = new Scalar(0, 255, 0, 255);
-    private static final Scalar    WHITE_COLOR          = new Scalar(255, 255, 255, 255);
-    private static final Scalar    OLD_COLOR		   = new Scalar(0, 0, 255, 255);
-    public static final int        JAVA_DETECTOR       = 0;
-    public static final int        NATIVE_DETECTOR     = 1;
-    public static final int        NUM_FRAMES_TO_LEARN_FROM = 13;
-    private static final int LOW_SEC = 30;
+    private static final String     TAG                 = "OCVSample::Activity";
+    private static final Scalar     HAND_RECT_COLOR     = new Scalar(0, 255, 0, 255);
+    //private static final Scalar   WHITE_COLOR          = new Scalar(255, 255, 255, 255);
+    //private static final Scalar   OLD_COLOR		     = new Scalar(0, 0, 255, 255);
+    public static final int         JAVA_DETECTOR       = 0;
+    public static final int         NATIVE_DETECTOR     = 1;
+    public static final int         NUM_FRAMES_TO_LEARN_FROM = 13;
+    private static final int        LOW_HOUR            = 6;
 
-    private MenuItem			   mItemFace50;
-    private MenuItem               mItemFace40;
-    private MenuItem               mItemFace30;
-    private MenuItem               mItemFace20;
-    private MenuItem               mItemType;
+    private MenuItem                mItemHand40;
+    private MenuItem                mItemHand30;
+    private MenuItem                mItemHand20;
+    private MenuItem                mItemHand15;
+    private MenuItem                mItemType;
 
-    private Mat                    mRgba;
-    private Mat                    mGray;
+    private Mat                     mRgba;
+    private Mat                     mGray;
     
-    private File                   mCascadeFile;
-    private CascadeClassifier      mJavaDetector;
-    private DetectionBasedTracker  mNativeDetector;
+    private File                    mCascadeFile;
+    private CascadeClassifier       mJavaDetector;
+    private DetectionBasedTracker   mNativeDetector;
 
-    private int                    mDetectorType       = JAVA_DETECTOR;
-    private String[]               mDetectorName;
+    private int                     mDetectorType       = JAVA_DETECTOR;
+    private String[]                mDetectorName;
 
-    private float                  mRelativeFaceSize   = 0.2f;
-    private int                    mAbsoluteFaceSize   = 0;
+    private float                   mRelativeHandSize   = 0.2f;
+    private int                     mAbsoluteHandSize   = 0;
 
     private CameraBridgeViewBase   mOpenCvCameraView;
   //my guys
     private Mat						mRgb;
     private Mat						mFGMask;
     private BackgroundSubtractorMOG sub;
-    private int 					bgCount;
+    /*private int 					bgCount;
     private ArrayList<Integer>		compare;
-    private Handler                 toastTeller;
+    private Handler                 toastTeller;*/
+    
+    //diego's guys
+    private BluetoothAdapter        adapter             = null;
+    private boolean                 check               = true;
+    private BluetoothDevice         device;
+    private int                     display_len         = 160;
+    //private boolean                 low_pow = false;
+
+
+    private OutputStream            out                 = null;
+    private byte[]                  pos; 
+    private int                     curr_pos = 0;
+    private int                     prev_pos = 0;
+    private int                     curr_y = 600;
+    private byte[]                  up = new byte[]{(byte)201};//{(byte)'u'};
+    private byte[]                  right = new byte[]{(byte)202};//{(byte)'r'};
+    private byte[]                  left = new byte[]{(byte)203};//{(byte)'l'};     
+    private byte[]                  power_on = new byte[]{(byte)255};//{(byte)'r'};
+    private byte[]                  power_off = new byte[]{(byte)254};//{(byte)'l'}; 
+    private boolean                 swipe_up = false;
+    private boolean                 swipe_r = false;
+    private boolean                 swipe_l = false;
+    private int                     REQUEST_ENABLE_BT = 1;
+    private UUID                    SERIAL_UUID;
+    private float                   screen_pos = .166f;
+    private BluetoothSocket         socket;
+
 
     private BaseLoaderCallback  mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
@@ -115,14 +143,13 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
                         cascadeDir.delete();
                         
                         //Diego's handler initiation
-                        toastTeller = new Handler() {
+                        /*toastTeller = new Handler() {
                             public void handleMessage(Message msg) {
                                 if (msg.what == 2)
                                 Toast.makeText(FdActivity.this, msg.obj.toString(), Toast.LENGTH_SHORT).show();
                                 super.handleMessage(msg);
                             }
-                        };
-                        //^^^^^^^^^^^^^^^^^^^^^^^^^^
+                        };*/
 
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -158,6 +185,88 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
 
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.fd_activity_surface_view);
         mOpenCvCameraView.setCvCameraViewListener(this);
+        
+        /*
+         * COMMUNICATE WITH HARDWARE
+         */
+        adapter = BluetoothAdapter.getDefaultAdapter();
+        if (adapter == null) {
+        // Device does not support Bluetooth
+        finish(); //exit
+        }
+        if (!adapter.isEnabled()) {
+            //make sure the device's bluetooth is enabled
+        Intent enableBluetooth = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+        //Intent testConnection = new Intent(BluetoothDevice.ACTION_ACL_DISCONNECTED);
+        startActivityForResult(enableBluetooth, REQUEST_ENABLE_BT);
+        }
+        SERIAL_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"); //UUID for serial connection
+        //String mac = "00:06:66:00:D8:EA"; //my laptop's mac adress
+        String mac = "00:13:01:04:16:47"; 
+        /*if(adapter.checkBluetoothAddress(mac))
+        Toast.makeText(this, "ok address", Toast.LENGTH_SHORT).show();
+        else
+        Toast.makeText(this, "no ok address", Toast.LENGTH_SHORT).show();*/
+        device = adapter.getRemoteDevice(mac); //get remote device by mac, we assume these two devices are already paired
+
+
+        // Get a BluetoothSocket to connect with the given BluetoothDevice
+        socket = null;
+        out = null;
+        try {
+        socket = device.createRfcommSocketToServiceRecord(SERIAL_UUID); 
+        } catch (IOException e) {}
+        try {           
+            socket.connect(); 
+            out = socket.getOutputStream();
+            //in = socket.getInputStream();
+        
+        //now you can use out to send output via out.write
+        } catch (IOException e) {}
+    }
+    
+    public void reconnect(){
+        
+        // Get a BluetoothSocket to connect with the given BluetoothDevice*/
+        
+        /*Bitmap myBitmap = BitmapFactory.decodeResource(getResources(),R.drawable.power_saver);                 
+            Bitmap myBitmap32 = myBitmap.copy(Bitmap.Config.ARGB_8888, true);
+            Utils.bitmapToMat(myBitmap32, low_power, true);*/
+                    
+        try{
+            socket.close();
+            if(out != null){
+                out.close();
+                //in.close();
+            }
+        }
+        catch (IOException e) {}
+        
+        //device = null;
+        //String mac = "00:06:66:00:D8:EA"; 
+        //device = adapter.getRemoteDevice(mac);
+        
+        socket = null;
+        out = null;
+        try {
+        socket = device.createRfcommSocketToServiceRecord(SERIAL_UUID); 
+        } catch (IOException e) {}
+        try {           
+            socket.connect(); 
+            //out = socket.getOutputStream();
+            //in = socket.getInputStream();
+            //now you can use out to send output via out.write
+        } catch (IOException e) {}
+        /*try {       
+            //might have to remove, first exceptions and cleans up
+      socket.connect(); 
+    } catch (IOException e) {}*/
+        try{
+         out = socket.getOutputStream();
+    }
+    catch (IOException e) {}
+    if(out != null)
+        Log.v("Output Stream ", "connected");
     }
 
     @Override
@@ -166,6 +275,10 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         super.onPause();
         if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
+        /*
+         * Send a message to turn the board OFF
+         */
+        //lowPower(true);
     }
 
     @Override
@@ -173,6 +286,10 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     {
         super.onResume();
         OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_3, this, mLoaderCallback);
+        /*
+         * Send a message to turn the board ON
+         */
+        //lowPower(false);
     }
 
     public void onDestroy() {
@@ -185,12 +302,14 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         mRgba = new Mat();
         mRgb = new Mat();
         mFGMask = new Mat();
-    	//sub = new BackgroundSubtractorMOG(13, 4, 0.8);
-        //sub = new BackgroundSubtractorMOG(1, 1, 0.8, 0.8);
+        /*
+         * Use all of this junk later when improving the hand detection
+         
         sub = new BackgroundSubtractorMOG();
         sub.setInt("nmixtures", 1);
     	bgCount = 0;
     	compare = new ArrayList<Integer>();
+    	*/
     }
 
     public void onCameraViewStopped() {
@@ -199,6 +318,10 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         mRgb.release();
         mFGMask.release();
     }
+    
+    /*
+     * This is not currently in use.
+     */
 
     public void learnBackground(double learningRate) {
 		Imgproc.cvtColor(mGray, mRgb, Imgproc.COLOR_GRAY2RGB);
@@ -211,7 +334,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     }
     
     /*
-     * This is primarily here for debugging.
+     * This method is primarily here for debugging.
      * If you touch the screen, it should force show the low-power screen.
      * @see android.app.Activity#onTouchEvent(android.view.MotionEvent)
      */
@@ -225,7 +348,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     public boolean timeForLowPowerMode() {
         
         Calendar cal = Calendar.getInstance();
-        if(cal.get(Calendar.SECOND) > LOW_SEC) {
+        if(cal.get(Calendar.HOUR) > LOW_HOUR) {
             Intent myIntent = new Intent(this, LowPowerActivity.class);
             startActivity(myIntent);
             return true;
@@ -238,9 +361,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         
         mRgba = inputFrame.rgba();
         mGray = inputFrame.gray();
-        mFGMask = mGray;
         
-        //
         if(timeForLowPowerMode())
             return mGray; 
         
@@ -276,94 +397,170 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
          * haar stuff
          */
         
-        if (mAbsoluteFaceSize == 0) {
+        if (mAbsoluteHandSize == 0) {
             int height = mGray.rows();
-            if (Math.round(height * mRelativeFaceSize) > 0) {
-                mAbsoluteFaceSize = Math.round(height * mRelativeFaceSize);
+            if (Math.round(height * mRelativeHandSize) > 0) {
+                mAbsoluteHandSize = Math.round(height * mRelativeHandSize);
             }
-            mNativeDetector.setMinFaceSize(mAbsoluteFaceSize);
+            mNativeDetector.setMinFaceSize(mAbsoluteHandSize);
         }
 
-        MatOfRect faces = new MatOfRect();
+        MatOfRect hands = new MatOfRect();
 
         if (mDetectorType == JAVA_DETECTOR) {
             if (mJavaDetector != null)
-                mJavaDetector.detectMultiScale(mFGMask, faces, 1.1, 2, 2, // TODO: objdetect.CV_HAAR_SCALE_IMAGE
-                        new Size(mAbsoluteFaceSize, mAbsoluteFaceSize), new Size());
+                mJavaDetector.detectMultiScale(mGray, hands, 1.1, 2, 2, // TODO: objdetect.CV_HAAR_SCALE_IMAGE
+                        new Size(mAbsoluteHandSize, mAbsoluteHandSize), new Size());
         }
         else if (mDetectorType == NATIVE_DETECTOR) {
             if (mNativeDetector != null)
-                mNativeDetector.detect(mFGMask, faces);
+                mNativeDetector.detect(mGray, hands);
         }
         else {
             Log.e(TAG, "Detection method is not selected!");
         }
 
-        Rect[] facesArray = faces.toArray();
-        /*
-         * Replacing the following commented two-lines with Diego's tracking code
-         */
+        Rect[] handsArray = hands.toArray();
+      
+       /*
+        * This following code prints all the necessary boxes
+        * The code below it 'prints only the first detected box
+        */
         
-       for (int i = 0; i < facesArray.length && i < 1; i++){
+       /*for (int i = 0; i < handsArray.length && i < 1; i++){
     		//assuming compare already had one
     	    if(compare.isEmpty())
-    		compare.add(facesArray[i].x);
+    		compare.add(handsArray[i].x);
     	    else{
     		    for(int j = 0; j < compare.size() && j < 4; j++){
-    			if(facesArray[i].x > (int) compare.get(j) + 10 || facesArray[i].x < (int) compare.get(j) - 10){
+    			if(handsArray[i].x > (int) compare.get(j) + 10 || handsArray[i].x < (int) compare.get(j) - 10){
     			    if(compare.size() < 4)
-    				compare.add(facesArray[i].x);
-    			    Core.rectangle(mFGMask, facesArray[i].tl(), facesArray[i].br(), WHITE_COLOR, 3);
+    				compare.add(handsArray[i].x);
+    			    Core.rectangle(mRgba, handsArray[i].tl(), handsArray[i].br(), FACE_RECT_COLOR, 3);
     			}
     			else{
-    			    Core.rectangle(mFGMask, facesArray[i].tl(), facesArray[i].br(), WHITE_COLOR, 3);
+    			    Core.rectangle(mRgba, handsArray[i].tl(), handsArray[i].br(), OLD_COLOR, 3);
     			}
     		    }   
     	    }
-    	}
-    	
-    	if(compare.size() == 4){
-    	//300 might be a good swipe value, also assuming that only hands would be boxed
-    		if (facesArray.length > 0 && (facesArray[0].x >= compare.get(3) + 100)){
-    			new Thread(new Runnable(){
-    				public void run(){
-    					Message msg = new Message();
-    					msg.what = 2;
-    					msg.obj = "Right swipe";
-    					toastTeller.sendMessage(msg);
-    				}
-    		 	}).start();
-    			compare.remove(3);
-    		}
-    			//Toast.makeText(getApplicationContext(), "Right Swipe", Toast.LENGTH_SHORT).show();
-    			//right swipe
-    		else if (facesArray.length > 0 && (facesArray[0].x <= compare.get(3) - 100)){
-    			new Thread(new Runnable(){
-    				public void run(){
-    					Message msg = new Message();
-    					msg.what = 2;
-    					msg.obj = "Left swipe";
-    					//for front camera opposite swipe!!!
-    					toastTeller.sendMessage(msg);
-    				}
-    		 	}).start();
-    			compare.remove(3);
-    		}
-    	}
+    	}*/
+       /*
+        * Talk to the bluetooth
+        */
+       if (handsArray.length > 0){
+           Core.rectangle(mRgba, handsArray[0].tl(), handsArray[0].br(), HAND_RECT_COLOR, 3);
+           /*if(HandsArray[0].x < 200){
+               byte num = (byte) (display_len -((HandsArray[0].width+HandsArray[0].x)*screen_loc));
+               left = new byte[]{num};
+               try {
+                   if(out != null)
+                       out.write(left);
+                   else
+                       reconnect(); 
+               } catch (IOException e) {}
+           }
+           else if(HandsArray[0].x > 400){
+               right = new byte[]{(byte)(display_len- ((HandsArray[0].width+HandsArray[0].x)*screen_loc))};
+               try {
+                   if(out != null)
+                       out.write(left);
+                   else
+                       reconnect(); 
+               } catch (IOException e) {}
+           }
+           else{*/
+           //log all locations and test to see what swipe would be best!!!!!
+           pos = new byte[]{(byte)(display_len-((handsArray[0].width+handsArray[0].x)*screen_pos))};
+           curr_pos = handsArray[0].x;
+           if(check){
+               if((curr_pos - prev_pos) > 300)
+                   swipe_l = true;
+               else if((curr_pos - prev_pos) < - 300)
+                   swipe_r = true;
+               /*if (curr_y == 0)
+                   curr_y = HandsArray[0].y;*/
+               else if(curr_y + 100 < handsArray[0].y)
+                   swipe_up = true;
+           }
+           else
+               check = true;
+
+           if(swipe_up || swipe_l || swipe_r)
+               check = false;
+           //  curr_y = 600;
+
+           //else
+           curr_y = handsArray[0].y;
+           prev_pos = curr_pos;
+           try {
+               if(out != null){
+                   if(swipe_l){
+                       Log.v("Swipe ", "swipe left");
+                       out.write(left);
+                       swipe_l = false;
+                   }
+                   else if(swipe_r){
+                       Log.v("Swipe ", "swipe right");
+                       out.write(right);
+                       swipe_r = false;
+                   }
+                   else if(swipe_up){
+                       Log.v("Swipe ", "swipe up");
+                       out.write(up);
+                       swipe_up = false;
+                   }
+                   else                    
+                       //Log.e(TAG, device.getName());
+                       out.write(pos);
+               }
+               else{
+                   reconnect(); 
+               }
+           } catch (IOException e) {}
+       }
+    
+       /*
+        * On Screen notifications:
+        *
+       if(compare.size() == 4){
+           //300 might be a good swipe value, also assuming that only hands would be boxed
+           if (handsArray.length > 0 && (handsArray[0].x >= compare.get(3) + 100)){
+               new Thread(new Runnable(){
+                   public void run(){
+                       Message msg = new Message();
+                       msg.what = 2;
+                       msg.obj = "Right swipe";
+                       toastTeller.sendMessage(msg);
+                   }
+               }).start();
+               compare.remove(3);
+           }
+           else if (handsArray.length > 0 && (handsArray[0].x <= compare.get(3) - 100)){
+               new Thread(new Runnable(){
+                   public void run(){
+                       Message msg = new Message();
+                       msg.what = 2;
+                       msg.obj = "Left swipe";
+                       //for front camera opposite swipe!!!
+                       toastTeller.sendMessage(msg);
+                   }
+               }).start();
+               compare.remove(3);
+           }
+       }*/
         
         
         
-        //return mRgba;
-        return mFGMask;
+        return mRgba;
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         Log.i(TAG, "called onCreateOptionsMenu");
-        mItemFace50 = menu.add("Face size 50%");
-        mItemFace40 = menu.add("Face size 40%");
-        mItemFace30 = menu.add("Face size 30%");
-        mItemFace20 = menu.add("Face size 20%");
+        mItemHand40 = menu.add("Hand size 40%");
+        mItemHand30 = menu.add("Hand size 30%");
+        mItemHand20 = menu.add("Hand size 20%");
+        mItemHand15 = menu.add("Hand size 15%");
         mItemType   = menu.add(mDetectorName[mDetectorType]);
         return true;
     }
@@ -371,14 +568,21 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         Log.i(TAG, "called onOptionsItemSelected; selected item: " + item);
-        if (item == mItemFace50)
-            setMinFaceSize(0.5f);
-        else if (item == mItemFace40)
-            setMinFaceSize(0.4f);
-        else if (item == mItemFace30)
-            setMinFaceSize(0.3f);
-        else if (item == mItemFace20)
-            setMinFaceSize(0.2f);
+        if (item == mItemHand15){
+            setMinHandSize(0.15f);
+            reconnect();
+        }
+        else if (item == mItemHand40){
+            setMinHandSize(0.4f);
+            try{
+                out.write(up);
+            }
+            catch (IOException e) {}
+        }
+        else if (item == mItemHand30)
+            setMinHandSize(0.3f);
+        else if (item == mItemHand20)
+            setMinHandSize(0.2f);
         else if (item == mItemType) {
             mDetectorType = (mDetectorType + 1) % mDetectorName.length;
             item.setTitle(mDetectorName[mDetectorType]);
@@ -387,9 +591,9 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         return true;
     }
 
-    private void setMinFaceSize(float faceSize) {
-        mRelativeFaceSize = faceSize;
-        mAbsoluteFaceSize = 0;
+    private void setMinHandSize(float handSize) {
+        mRelativeHandSize = handSize;
+        mAbsoluteHandSize = 0;
     }
 
     private void setDetectorType(int type) {
@@ -404,5 +608,23 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
                 mNativeDetector.stop();
             }
         }
+    }
+    
+    public void lowPower(boolean on){
+        try{
+            if(out != null){
+                if(on){
+                    Log.v("Intents ", "not reached");
+                    out.write(power_on);
+                }
+                else{
+                    out.write(power_off);
+                    Log.v("Intents ", "reached");
+                    Intent myIntent = new Intent(this, LowPowerActivity.class);
+                    startActivity(myIntent);
+                }
+            }
+        } catch (IOException e) {}
+        //low_pow = !on;
     }
 }
