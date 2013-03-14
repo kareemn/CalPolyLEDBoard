@@ -31,6 +31,8 @@ import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.PowerManager;
+import android.os.PowerManager.WakeLock;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -174,7 +176,10 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         Log.i(TAG, "Instantiated new " + this.getClass());
     }
 
-    /** Called when the activity is first created. */
+    /*
+     * Called when the activity is first created!
+     * On create, disable sleep mode, set up the bluetooth connection.
+     */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         Log.i(TAG, "called onCreate");
@@ -186,6 +191,14 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.fd_activity_surface_view);
         mOpenCvCameraView.setCvCameraViewListener(this);
         
+        /*
+         * Disable sleep
+         */
+        /*pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        PowerManager.WakeLock sleepLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "My Tag");
+        sleepLock.acquire();*/
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
         /*
          * COMMUNICATE WITH HARDWARE
          */
@@ -219,7 +232,6 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         try {           
             socket.connect(); 
             out = socket.getOutputStream();
-            //in = socket.getInputStream();
         
         //now you can use out to send output via out.write
         } catch (IOException e) {}
@@ -227,24 +239,14 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     
     public void reconnect(){
         
-        // Get a BluetoothSocket to connect with the given BluetoothDevice*/
-        
-        /*Bitmap myBitmap = BitmapFactory.decodeResource(getResources(),R.drawable.power_saver);                 
-            Bitmap myBitmap32 = myBitmap.copy(Bitmap.Config.ARGB_8888, true);
-            Utils.bitmapToMat(myBitmap32, low_power, true);*/
-                    
+        // Get a BluetoothSocket to connect with the given BluetoothDevice*/            
         try{
             socket.close();
             if(out != null){
                 out.close();
-                //in.close();
             }
         }
         catch (IOException e) {}
-        
-        //device = null;
-        //String mac = "00:06:66:00:D8:EA"; 
-        //device = adapter.getRemoteDevice(mac);
         
         socket = null;
         out = null;
@@ -252,15 +254,8 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         socket = device.createRfcommSocketToServiceRecord(SERIAL_UUID); 
         } catch (IOException e) {}
         try {           
-            socket.connect(); 
-            //out = socket.getOutputStream();
-            //in = socket.getInputStream();
-            //now you can use out to send output via out.write
+            socket.connect();
         } catch (IOException e) {}
-        /*try {       
-            //might have to remove, first exceptions and cleans up
-      socket.connect(); 
-    } catch (IOException e) {}*/
         try{
          out = socket.getOutputStream();
     }
@@ -278,7 +273,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         /*
          * Send a message to turn the board OFF
          */
-        //lowPower(true);
+        lowPower(true);
     }
 
     @Override
@@ -289,9 +284,12 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         /*
          * Send a message to turn the board ON
          */
-        //lowPower(false);
+        lowPower(false);
     }
 
+    /*
+     * On destroy, turn off the camera.
+     */
     public void onDestroy() {
         super.onDestroy();
         mOpenCvCameraView.disableView();
