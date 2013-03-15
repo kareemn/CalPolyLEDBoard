@@ -20,7 +20,7 @@ public class LowPowerActivity extends Activity {
     //my variables
     private static final int        START_HOUR          = 6;
     private static final int        END_HOUR            = 19;
-    private static final int        MINUTES_BTWN_CHECKS = 5;
+    private static final int        MINUTES_BTWN_CHECKS = 1;
     private static final int        MS_PER_MIN          = 60000;
     
     @Override
@@ -32,16 +32,20 @@ public class LowPowerActivity extends Activity {
                 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-        new Handler().postDelayed(new Runnable() {
+        new Handler().postDelayed(wakeOnTime,15000);
+        /*new Handler().postDelayed(new Runnable() {
             public void run() {
                 wakeOnTime();
             }
-        }, 1000);
+        }, 1000);*/
+        
         /*new Handler().postDelayed(new Thread() {
             public void run() {
                 wakeOnTime();
             }
         }, 1000);*/
+        
+        
            
     }
 
@@ -86,21 +90,24 @@ public class LowPowerActivity extends Activity {
      * our timer-goal. This loop, although run in a new thread, freezes the app
      * and the app fails to respond to a back-button or to the following onTouchEvent.
      */    
-    public void wakeOnTime() {
-        Calendar cal;
-        int currentHour;
-        do {
-            cal = Calendar.getInstance();
-            currentHour = cal.get(Calendar.HOUR_OF_DAY);
-            //debug info
-            System.out.println(currentHour);
-            //dont check too often
-            /*try { Thread.currentThread().sleep(2500);}//MINUTES_BTWN_CHECKS / 5 * MS_PER_MIN); }
-            catch ( Exception e ) { }*/
-            new Handler().sendEmptyMessageDelayed(1, 2500);
+    private Runnable wakeOnTime = new Runnable() {
+        @Override
+        public void run() {
+            Calendar cal;
+            int currentHour;
+            do {
+                cal = Calendar.getInstance();
+                currentHour = cal.get(Calendar.HOUR_OF_DAY);
+                //debug info
+                System.out.println(currentHour);
+                //dont check too often
+                System.out.println("Waiting for " + (MINUTES_BTWN_CHECKS * MS_PER_MIN / 4) + " ms.");
+                new Handler().sendEmptyMessageDelayed(1, MINUTES_BTWN_CHECKS * MS_PER_MIN / 4); //TODO: this doesn't delay
+            }
+            while(currentHour < START_HOUR || END_HOUR < currentHour);
+            
+            System.out.println("NOW FINISHING WOOO");
+            finish();
         }
-        while(currentHour < START_HOUR || END_HOUR < currentHour);
-        System.out.println("NOW FINISHING WOOO");
-        finish();
-    }
+    };
 }
