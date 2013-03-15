@@ -18,9 +18,10 @@ import android.os.Build;
 public class LowPowerActivity extends Activity {
 
     //my variables
-    protected static final int HIGH_HOUR = 7;
-    private static final int MINUTES_BTWN_CHECKS = 10;
-    private static final int MS_PER_MIN = 60000;
+    private static final int        START_HOUR          = 6;
+    private static final int        END_HOUR            = 19;
+    private static final int        MINUTES_BTWN_CHECKS = 5;
+    private static final int        MS_PER_MIN          = 60000;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,16 +32,16 @@ public class LowPowerActivity extends Activity {
                 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-        /*new Handler().postDelayed(new Runnable() {
-            public void run() {
-                wakeOnTime();
-            }
-        }, 1000);*/
-        new Handler().postDelayed(new Thread() {
+        new Handler().postDelayed(new Runnable() {
             public void run() {
                 wakeOnTime();
             }
         }, 1000);
+        /*new Handler().postDelayed(new Thread() {
+            public void run() {
+                wakeOnTime();
+            }
+        }, 1000);*/
            
     }
 
@@ -86,15 +87,20 @@ public class LowPowerActivity extends Activity {
      * and the app fails to respond to a back-button or to the following onTouchEvent.
      */    
     public void wakeOnTime() {
-        Calendar cal = Calendar.getInstance();
-        while(cal.get(Calendar.HOUR) >= HIGH_HOUR) {
+        Calendar cal;
+        int currentHour;
+        do {
             cal = Calendar.getInstance();
+            currentHour = cal.get(Calendar.HOUR_OF_DAY);
             //debug info
-            System.out.println(cal.get(Calendar.HOUR));
+            System.out.println(currentHour);
             //dont check too often
-            try { Thread.currentThread().sleep(MINUTES_BTWN_CHECKS * MS_PER_MIN); }
-            catch ( Exception e ) { }
+            /*try { Thread.currentThread().sleep(2500);}//MINUTES_BTWN_CHECKS / 5 * MS_PER_MIN); }
+            catch ( Exception e ) { }*/
+            new Handler().sendEmptyMessageDelayed(1, 2500);
         }
+        while(currentHour < START_HOUR || END_HOUR < currentHour);
+        System.out.println("NOW FINISHING WOOO");
         finish();
     }
 }

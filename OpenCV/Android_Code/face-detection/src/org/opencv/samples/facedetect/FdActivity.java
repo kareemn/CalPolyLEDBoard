@@ -50,7 +50,8 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     public static final int         JAVA_DETECTOR       = 0;
     public static final int         NATIVE_DETECTOR     = 1;
     public static final int         NUM_FRAMES_TO_LEARN_FROM = 13;
-    private static final int        LOW_HOUR            = 6;
+    private static final int        START_HOUR          = 6;
+    private static final int        END_HOUR            = 19;
 
     private MenuItem                mItemHand40;
     private MenuItem                mItemHand30;
@@ -60,7 +61,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
 
     private Mat                     mRgba;
     private Mat                     mGray;
-    
+
     private File                    mCascadeFile;
     private CascadeClassifier       mJavaDetector;
     private DetectionBasedTracker   mNativeDetector;
@@ -71,39 +72,38 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     private float                   mRelativeHandSize   = 0.2f;
     private int                     mAbsoluteHandSize   = 0;
 
-    private CameraBridgeViewBase   mOpenCvCameraView;
-  //my guys
+    private CameraBridgeViewBase    mOpenCvCameraView;
+    //my guys
     private Mat						mRgb;
     private Mat						mFGMask;
     private BackgroundSubtractorMOG sub;
     /*private int 					bgCount;
     private ArrayList<Integer>		compare;
     private Handler                 toastTeller;*/
-    
+
     //diego's guys
     private BluetoothAdapter        adapter             = null;
     private boolean                 check               = true;
     private BluetoothDevice         device;
     private int                     display_len         = 160;
-    //private boolean                 low_pow = false;
 
 
     private OutputStream            out                 = null;
     private byte[]                  pos; 
-    private int                     curr_pos = 0;
-    private int                     prev_pos = 0;
-    private int                     curr_y = 600;
-    private byte[]                  up = new byte[]{(byte)201};//{(byte)'u'};
-    private byte[]                  right = new byte[]{(byte)202};//{(byte)'r'};
-    private byte[]                  left = new byte[]{(byte)203};//{(byte)'l'};     
-    private byte[]                  power_on = new byte[]{(byte)255};//{(byte)'r'};
-    private byte[]                  power_off = new byte[]{(byte)254};//{(byte)'l'}; 
-    private boolean                 swipe_up = false;
-    private boolean                 swipe_r = false;
-    private boolean                 swipe_l = false;
-    private int                     REQUEST_ENABLE_BT = 1;
+    private int                     curr_pos            = 0;
+    private int                     prev_pos            = 0;
+    private int                     curr_y              = 600;
+    private byte[]                  up                  = new byte[]{(byte)201};//{(byte)'u'};
+    private byte[]                  right               = new byte[]{(byte)202};//{(byte)'r'};
+    private byte[]                  left                = new byte[]{(byte)203};//{(byte)'l'};     
+    private byte[]                  power_on            = new byte[]{(byte)255};//{(byte)'r'};
+    private byte[]                  power_off           = new byte[]{(byte)254};//{(byte)'l'}; 
+    private boolean                 swipe_up            = false;
+    private boolean                 swipe_r             = false;
+    private boolean                 swipe_l             = false;
+    private int                     REQUEST_ENABLE_BT   = 1;
     private UUID                    SERIAL_UUID;
-    private float                   screen_pos = .166f;
+    private float                   screen_pos          = .166f;
     private BluetoothSocket         socket;
 
 
@@ -111,41 +111,41 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         @Override
         public void onManagerConnected(int status) {
             switch (status) {
-                case LoaderCallbackInterface.SUCCESS:
-                {
-                    Log.i(TAG, "OpenCV loaded successfully");
+            case LoaderCallbackInterface.SUCCESS:
+            {
+                Log.i(TAG, "OpenCV loaded successfully");
 
-                    // Load native library after(!) OpenCV initialization
-                    System.loadLibrary("detection_based_tracker");
+                // Load native library after(!) OpenCV initialization
+                System.loadLibrary("detection_based_tracker");
 
-                    try {
-                        // load cascade file from application resources
-                        InputStream is = getResources().openRawResource(R.raw.haarcascade_fist);
-                        File cascadeDir = getDir("cascade", Context.MODE_PRIVATE);
-                        mCascadeFile = new File(cascadeDir, "haarcascade_fist.xml");
-                        FileOutputStream os = new FileOutputStream(mCascadeFile);
+                try {
+                    // load cascade file from application resources
+                    InputStream is = getResources().openRawResource(R.raw.haarcascade_fist);
+                    File cascadeDir = getDir("cascade", Context.MODE_PRIVATE);
+                    mCascadeFile = new File(cascadeDir, "haarcascade_fist.xml");
+                    FileOutputStream os = new FileOutputStream(mCascadeFile);
 
-                        byte[] buffer = new byte[4096];
-                        int bytesRead;
-                        while ((bytesRead = is.read(buffer)) != -1) {
-                            os.write(buffer, 0, bytesRead);
-                        }
-                        is.close();
-                        os.close();
+                    byte[] buffer = new byte[4096];
+                    int bytesRead;
+                    while ((bytesRead = is.read(buffer)) != -1) {
+                        os.write(buffer, 0, bytesRead);
+                    }
+                    is.close();
+                    os.close();
 
-                        mJavaDetector = new CascadeClassifier(mCascadeFile.getAbsolutePath());
-                        if (mJavaDetector.empty()) {
-                            Log.e(TAG, "Failed to load cascade classifier");
-                            mJavaDetector = null;
-                        } else
-                            Log.i(TAG, "Loaded cascade classifier from " + mCascadeFile.getAbsolutePath());
+                    mJavaDetector = new CascadeClassifier(mCascadeFile.getAbsolutePath());
+                    if (mJavaDetector.empty()) {
+                        Log.e(TAG, "Failed to load cascade classifier");
+                        mJavaDetector = null;
+                    } else
+                        Log.i(TAG, "Loaded cascade classifier from " + mCascadeFile.getAbsolutePath());
 
-                        mNativeDetector = new DetectionBasedTracker(mCascadeFile.getAbsolutePath(), 0);
+                    mNativeDetector = new DetectionBasedTracker(mCascadeFile.getAbsolutePath(), 0);
 
-                        cascadeDir.delete();
-                        
-                        //Diego's handler initiation
-                        /*toastTeller = new Handler() {
+                    cascadeDir.delete();
+
+                    //Diego's handler initiation
+                    /*toastTeller = new Handler() {
                             public void handleMessage(Message msg) {
                                 if (msg.what == 2)
                                 Toast.makeText(FdActivity.this, msg.obj.toString(), Toast.LENGTH_SHORT).show();
@@ -153,17 +153,17 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
                             }
                         };*/
 
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        Log.e(TAG, "Failed to load cascade. Exception thrown: " + e);
-                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    Log.e(TAG, "Failed to load cascade. Exception thrown: " + e);
+                }
 
-                    mOpenCvCameraView.enableView();
-                } break;
-                default:
-                {
-                    super.onManagerConnected(status);
-                } break;
+                mOpenCvCameraView.enableView();
+            } break;
+            default:
+            {
+                super.onManagerConnected(status);
+            } break;
             }
         }
     };
@@ -184,19 +184,15 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
     public void onCreate(Bundle savedInstanceState) {
         Log.i(TAG, "called onCreate");
         super.onCreate(savedInstanceState);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         setContentView(R.layout.face_detect_surface_view);
 
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.fd_activity_surface_view);
         mOpenCvCameraView.setCvCameraViewListener(this);
-        
+
         /*
          * Disable sleep
          */
-        /*pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        PowerManager.WakeLock sleepLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "My Tag");
-        sleepLock.acquire();*/
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         /*
@@ -204,22 +200,18 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
          */
         adapter = BluetoothAdapter.getDefaultAdapter();
         if (adapter == null) {
-        // Device does not support Bluetooth
-        finish(); //exit
+            // Device does not support Bluetooth
+            finish(); //exit
         }
         if (!adapter.isEnabled()) {
             //make sure the device's bluetooth is enabled
-        Intent enableBluetooth = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-        //Intent testConnection = new Intent(BluetoothDevice.ACTION_ACL_DISCONNECTED);
-        startActivityForResult(enableBluetooth, REQUEST_ENABLE_BT);
+            Intent enableBluetooth = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            //Intent testConnection = new Intent(BluetoothDevice.ACTION_ACL_DISCONNECTED);
+            startActivityForResult(enableBluetooth, REQUEST_ENABLE_BT);
         }
         SERIAL_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"); //UUID for serial connection
         //String mac = "00:06:66:00:D8:EA"; //my laptop's mac adress
-        String mac = "00:13:01:04:16:47"; 
-        /*if(adapter.checkBluetoothAddress(mac))
-        Toast.makeText(this, "ok address", Toast.LENGTH_SHORT).show();
-        else
-        Toast.makeText(this, "no ok address", Toast.LENGTH_SHORT).show();*/
+        String mac = "00:06:66:00:D8:EA"; 
         device = adapter.getRemoteDevice(mac); //get remote device by mac, we assume these two devices are already paired
 
 
@@ -227,18 +219,18 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         socket = null;
         out = null;
         try {
-        socket = device.createRfcommSocketToServiceRecord(SERIAL_UUID); 
+            socket = device.createRfcommSocketToServiceRecord(SERIAL_UUID); 
         } catch (IOException e) {}
         try {           
             socket.connect(); 
             out = socket.getOutputStream();
-        
-        //now you can use out to send output via out.write
+
+            //now you can use out to send output via out.write
         } catch (IOException e) {}
     }
-    
+
     public void reconnect(){
-        
+
         // Get a BluetoothSocket to connect with the given BluetoothDevice*/            
         try{
             socket.close();
@@ -247,21 +239,21 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
             }
         }
         catch (IOException e) {}
-        
+
         socket = null;
         out = null;
         try {
-        socket = device.createRfcommSocketToServiceRecord(SERIAL_UUID); 
+            socket = device.createRfcommSocketToServiceRecord(SERIAL_UUID); 
         } catch (IOException e) {}
         try {           
             socket.connect();
         } catch (IOException e) {}
         try{
-         out = socket.getOutputStream();
-    }
-    catch (IOException e) {}
-    if(out != null)
-        Log.v("Output Stream ", "connected");
+            out = socket.getOutputStream();
+        }
+        catch (IOException e) {}
+        if(out != null)
+            Log.v("Output Stream ", "connected");
     }
 
     @Override
@@ -302,12 +294,12 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         mFGMask = new Mat();
         /*
          * Use all of this junk later when improving the hand detection
-         
+
         sub = new BackgroundSubtractorMOG();
         sub.setInt("nmixtures", 1);
     	bgCount = 0;
     	compare = new ArrayList<Integer>();
-    	*/
+         */
     }
 
     public void onCameraViewStopped() {
@@ -316,13 +308,13 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         mRgb.release();
         mFGMask.release();
     }
-    
+
     /*
      * This is not currently in use.
      */
 
     public void learnBackground(double learningRate) {
-		Imgproc.cvtColor(mGray, mRgb, Imgproc.COLOR_GRAY2RGB);
+        Imgproc.cvtColor(mGray, mRgb, Imgproc.COLOR_GRAY2RGB);
         sub.apply(mRgb, mFGMask, learningRate);//exports a gray image
         Imgproc.threshold(mFGMask, mFGMask, 128, 255, Imgproc.THRESH_BINARY);
         Imgproc.medianBlur(mFGMask, mFGMask, 9);
@@ -330,7 +322,7 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         Imgproc.dilate(mFGMask, mFGMask, new Mat());
         mGray.copyTo(mFGMask, mFGMask);
     }
-    
+
     /*
      * This method is primarily here for debugging.
      * If you touch the screen, it should force show the low-power screen.
@@ -342,27 +334,28 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         startActivity(myIntent);
         return super.onTouchEvent(event);
     }
-    
+
     public boolean timeForLowPowerMode() {
-        
+
         Calendar cal = Calendar.getInstance();
-        if(cal.get(Calendar.HOUR) > LOW_HOUR) {
+        int currentHour = cal.get(Calendar.HOUR_OF_DAY);
+        if(END_HOUR < currentHour && currentHour < START_HOUR) {
             Intent myIntent = new Intent(this, LowPowerActivity.class);
             startActivity(myIntent);
             return true;
         }
-        
+
         return false;
     }
-    
+
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
-        
+
         mRgba = inputFrame.rgba();
         mGray = inputFrame.gray();
-        
+
         if(timeForLowPowerMode())
-            return mGray; 
-        
+            return mGray;
+
         /*if (mDetectorType == JAVA_DETECTOR) {
           //backgroundFilter the first NUM_FRAMES_TO_LEARN_FROM
             if(bgCount++ < NUM_FRAMES_TO_LEARN_FROM)
@@ -379,8 +372,8 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         else {
             Log.e(TAG, "Detection method is not selected!");
         }*/
-        
-        
+
+
         //trial junk
         /*if(lastFrame.empty())
             lastFrame = mRgba; //should be CV_32FC1 or CV_64FC1
@@ -390,11 +383,11 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
             //mRgba.convertTo(currentFrame, Imgproc.CV_32FC1, 1, 0);
             subPixel = Imgproc.phaseCorrelate(lastFrame, currentFrame);
         }*/
-        
+
         /*
          * haar stuff
          */
-        
+
         if (mAbsoluteHandSize == 0) {
             int height = mGray.rows();
             if (Math.round(height * mRelativeHandSize) > 0) {
@@ -419,107 +412,68 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
         }
 
         Rect[] handsArray = hands.toArray();
-      
-       /*
-        * This following code prints all the necessary boxes
-        * The code below it 'prints only the first detected box
-        */
-        
-       /*for (int i = 0; i < handsArray.length && i < 1; i++){
-    		//assuming compare already had one
-    	    if(compare.isEmpty())
-    		compare.add(handsArray[i].x);
-    	    else{
-    		    for(int j = 0; j < compare.size() && j < 4; j++){
-    			if(handsArray[i].x > (int) compare.get(j) + 10 || handsArray[i].x < (int) compare.get(j) - 10){
-    			    if(compare.size() < 4)
-    				compare.add(handsArray[i].x);
-    			    Core.rectangle(mRgba, handsArray[i].tl(), handsArray[i].br(), FACE_RECT_COLOR, 3);
-    			}
-    			else{
-    			    Core.rectangle(mRgba, handsArray[i].tl(), handsArray[i].br(), OLD_COLOR, 3);
-    			}
-    		    }   
-    	    }
-    	}*/
-       /*
-        * Talk to the bluetooth
-        */
-       if (handsArray.length > 0){
-           Core.rectangle(mRgba, handsArray[0].tl(), handsArray[0].br(), HAND_RECT_COLOR, 3);
-           /*if(HandsArray[0].x < 200){
-               byte num = (byte) (display_len -((HandsArray[0].width+HandsArray[0].x)*screen_loc));
-               left = new byte[]{num};
-               try {
-                   if(out != null)
-                       out.write(left);
-                   else
-                       reconnect(); 
-               } catch (IOException e) {}
-           }
-           else if(HandsArray[0].x > 400){
-               right = new byte[]{(byte)(display_len- ((HandsArray[0].width+HandsArray[0].x)*screen_loc))};
-               try {
-                   if(out != null)
-                       out.write(left);
-                   else
-                       reconnect(); 
-               } catch (IOException e) {}
-           }
-           else{*/
-           //log all locations and test to see what swipe would be best!!!!!
-           pos = new byte[]{(byte)(display_len-((handsArray[0].width+handsArray[0].x)*screen_pos))};
-           curr_pos = handsArray[0].x;
-           if(check){
-               if((curr_pos - prev_pos) > 300)
-                   swipe_l = true;
-               else if((curr_pos - prev_pos) < - 300)
-                   swipe_r = true;
-               /*if (curr_y == 0)
-                   curr_y = HandsArray[0].y;*/
-               else if(curr_y + 100 < handsArray[0].y)
-                   swipe_up = true;
-           }
-           else
-               check = true;
 
-           if(swipe_up || swipe_l || swipe_r)
-               check = false;
-           //  curr_y = 600;
+        /*
+         * This following code prints only the first detected box
+         * It uses this detection to send control messages to the bluetooth
+         */
+        if (handsArray.length > 0){
+            Core.rectangle(mRgba, handsArray[0].tl(), handsArray[0].br(), HAND_RECT_COLOR, 3);
 
-           //else
-           curr_y = handsArray[0].y;
-           prev_pos = curr_pos;
-           try {
-               if(out != null){
-                   if(swipe_l){
-                       Log.v("Swipe ", "swipe left");
-                       out.write(left);
-                       swipe_l = false;
-                   }
-                   else if(swipe_r){
-                       Log.v("Swipe ", "swipe right");
-                       out.write(right);
-                       swipe_r = false;
-                   }
-                   else if(swipe_up){
-                       Log.v("Swipe ", "swipe up");
-                       out.write(up);
-                       swipe_up = false;
-                   }
-                   else                    
-                       //Log.e(TAG, device.getName());
-                       out.write(pos);
-               }
-               else{
-                   reconnect(); 
-               }
-           } catch (IOException e) {}
-       }
-    
-       /*
-        * On Screen notifications:
-        *
+            /*
+             * Talk to the bluetooth
+             */
+
+            //log all locations and test to see what swipe would be best!!!!!
+            pos = new byte[]{(byte)(display_len-((handsArray[0].width+handsArray[0].x)*screen_pos))};
+            curr_pos = handsArray[0].x;
+            if(check){
+                if((curr_pos - prev_pos) > 300)
+                    swipe_l = true;
+                else if((curr_pos - prev_pos) < - 300)
+                    swipe_r = true;
+                else if(curr_y + 100 < handsArray[0].y)
+                    swipe_up = true;
+            }
+            else
+                check = true;
+
+            if(swipe_up || swipe_l || swipe_r)
+                check = false;
+
+            //else
+            curr_y = handsArray[0].y;
+            prev_pos = curr_pos;
+            try {
+                if(out != null){
+                    if(swipe_l){
+                        Log.v("Swipe ", "swipe left");
+                        out.write(left);
+                        swipe_l = false;
+                    }
+                    else if(swipe_r){
+                        Log.v("Swipe ", "swipe right");
+                        out.write(right);
+                        swipe_r = false;
+                    }
+                    else if(swipe_up){
+                        Log.v("Swipe ", "swipe up");
+                        out.write(up);
+                        swipe_up = false;
+                    }
+                    else                    
+                        out.write(pos);
+                }
+                else{
+                    reconnect(); 
+                }
+            } catch (IOException e) {}
+        }
+
+        /*
+         * On Screen notifications:
+         * there exist two alerts: "swipe left" and "swipe right"
+         *
        if(compare.size() == 4){
            //300 might be a good swipe value, also assuming that only hands would be boxed
            if (handsArray.length > 0 && (handsArray[0].x >= compare.get(3) + 100)){
@@ -546,9 +500,9 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
                compare.remove(3);
            }
        }*/
-        
-        
-        
+
+
+
         return mRgba;
     }
 
@@ -607,22 +561,21 @@ public class FdActivity extends Activity implements CvCameraViewListener2 {
             }
         }
     }
-    
-    public void lowPower(boolean on){
+
+    public void lowPower(boolean enterLowPower){
         try{
             if(out != null){
-                if(on){
+                if(!enterLowPower){
                     Log.v("Intents ", "not reached");
                     out.write(power_on);
                 }
                 else{
                     out.write(power_off);
                     Log.v("Intents ", "reached");
-                    Intent myIntent = new Intent(this, LowPowerActivity.class);
-                    startActivity(myIntent);
+                    /*Intent myIntent = new Intent(this, LowPowerActivity.class);
+                    startActivity(myIntent);*/
                 }
             }
         } catch (IOException e) {}
-        //low_pow = !on;
     }
 }
